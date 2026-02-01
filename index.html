@@ -25,166 +25,142 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        /* Capas de Fondo */
+        #media-container {
+            position: fixed; inset: 0; z-index: -3;
+        }
+        #bg-video, #bg-image {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            object-fit: cover; opacity: 0; transition: opacity 1.5s ease;
+        }
+
+        .bg-layer {
+            position: fixed; inset: 0;
+            background: radial-gradient(circle at 50% 100%, var(--autumn-orange) -20%, var(--leaf-green) 40%, var(--bg-deep) 90%);
+            z-index: -2; opacity: 0.5;
+        }
+
         .grain {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: url('https://grainy-gradients.vercel.app/noise.svg');
             opacity: 0.12; pointer-events: none; z-index: 50;
         }
 
-        .bg-layer {
-            position: fixed; inset: 0;
-            background: radial-gradient(circle at 50% 100%, var(--autumn-orange) -20%, var(--leaf-green) 40%, var(--bg-deep) 90%);
-            z-index: -2; transition: opacity 1.5s ease;
-        }
-
-        #bg-video {
-            position: fixed; inset: 0; width: 100%; height: 100%;
-            z-index: -3; object-fit: cover; opacity: 0.4; transition: opacity 2s ease;
-        }
-
+        /* Pantallas */
         .screen {
             position: fixed; inset: 0;
             display: none; flex-direction: column; align-items: center;
-            justify-content: center; padding: 1.5rem;
+            justify-content: center; padding: 2rem;
             text-align: center; opacity: 0;
             transition: opacity 0.6s ease; z-index: 10;
         }
-
         .screen.active { display: flex; opacity: 1; }
 
+        /* Elementos UI */
         .object-btn {
             background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
-            border-radius: 8px; width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-            padding: 10px; box-sizing: border-box;
+            transition: all 0.2s ease; border-radius: 8px;
+            font-size: 0.7rem; text-transform: uppercase; font-weight: 600;
         }
-
-        .object-btn.selected { 
-            background: var(--autumn-orange); color: white; 
-            border-color: rgba(255,255,255,0.4); transform: scale(0.92); 
-        }
-
-        .voice-btn { 
-            font-family: 'Permanent Marker', cursive; 
-            font-size: 2.2rem; transition: transform 0.3s; 
-            outline: none; -webkit-tap-highlight-color: transparent;
-        }
-        
-        .voice-btn:active { transform: scale(0.9); color: var(--autumn-orange); }
+        .object-btn.selected { background: var(--autumn-orange); border-color: white; transform: scale(0.95); }
 
         .btn-main {
-            border: 1px solid var(--text-off); padding: 1.1rem 2rem;
-            text-transform: uppercase; font-weight: 900; letter-spacing: 0.25em;
-            font-size: 0.7rem; transition: all 0.3s;
-            background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
-            width: 100%; max-width: 260px;
+            border: 1px solid var(--text-off); padding: 1.2rem 2rem;
+            text-transform: uppercase; font-weight: 900; letter-spacing: 0.3em;
+            font-size: 0.75rem; background: rgba(0,0,0,0.6);
+            width: 100%; max-width: 280px; transition: all 0.3s;
+        }
+        .btn-main:active { transform: scale(0.95); background: var(--text-off); color: black; }
+
+        .voice-btn { font-family: 'Permanent Marker', cursive; font-size: 2.4rem; }
+
+        #secret-trigger { 
+            position: fixed; bottom: 0; right: 0; width: 80px; height: 80px; 
+            z-index: 1000; cursor: pointer;
+        }
+
+        /* Panel Admin */
+        #admin-panel {
+            position: fixed; top: 0; right: -100%; width: 100%; height: 100%;
+            background: #0a0a0a; color: white; z-index: 2000; transition: 0.4s ease;
+            display: flex; flex-direction: column; font-family: sans-serif;
+        }
+        #admin-panel.open { right: 0; }
+        .admin-content { flex: 1; overflow-y: auto; padding: 1.5rem; }
+        .admin-input {
+            width: 100%; background: #1a1a1a; border: 1px solid #333;
+            padding: 10px; border-radius: 4px; color: white; margin-bottom: 12px; font-size: 13px;
         }
 
         .typewriter { font-family: 'Special Elite', serif; }
-
-        /* Disparador del panel admin (esquina inferior derecha) */
-        #secret-trigger { 
-            position: fixed; bottom: 0; right: 0; width: 80px; height: 80px; 
-            z-index: 100; opacity: 0; cursor: pointer;
-        }
-
-        #admin-panel {
-            position: fixed; top: 0; right: -100%; width: 100%; height: 100%;
-            background: #0d0d0d; color: #eee; z-index: 200; transition: 0.4s ease;
-            display: flex; flex-direction: column;
-        }
-        #admin-panel.open { right: 0; }
-        .admin-content { flex: 1; overflow-y: auto; padding: 1.5rem; padding-bottom: 5rem; }
-
-        .tree {
-            position: absolute; width: 100px; height: 100px;
-            color: rgba(0, 0, 0, 0.15); pointer-events: none; z-index: -1;
-        }
-        @keyframes zoomTree {
-            0% { transform: scale(0.2) rotate(0deg); opacity: 0; }
-            20% { opacity: 0.3; }
-            100% { transform: scale(5) rotate(10deg); opacity: 0; }
-        }
     </style>
 </head>
 <body>
 
     <div class="grain"></div>
-    <!-- Video de Pixabay cargado directamente -->
-    <video id="bg-video" autoplay muted loop playsinline src="https://cdn.pixabay.com/video/2024/08/05/224962_large.mp4"></video>
-    <div class="bg-layer" id="dynamic-bg"></div>
-    <div id="trees-container"></div>
+    <div id="media-container">
+        <video id="bg-video" muted loop playsinline></video>
+        <img id="bg-image" alt="background">
+    </div>
+    <div class="bg-layer"></div>
 
     <div id="secret-trigger" onclick="openLogin()"></div>
 
+    <!-- P1: Landing -->
     <div id="screen-landing" class="screen active">
-        <div class="flex flex-col items-center">
-            <h1 id="editable-title" class="text-5xl sm:text-9xl font-black tracking-tighter mb-2 leading-none">INNERSPEAKER</h1>
-            <h2 id="editable-subtitle" class="text-xs sm:text-2xl font-light tracking-[0.4em] mb-20 opacity-70 uppercase">TAME IMPALA</h2>
-            <button onclick="goTo('room')" class="btn-main">ENTRAR</button>
-            <p id="status-text" class="text-[8px] sm:text-[10px] mt-16 uppercase opacity-40 tracking-widest px-8 max-w-xs leading-relaxed"></p>
-        </div>
+        <h1 id="view-title" class="text-6xl sm:text-8xl font-black tracking-tighter mb-2 leading-none">INNERSPEAKER</h1>
+        <h2 id="view-subtitle" class="text-[10px] sm:text-lg font-light tracking-[0.5em] mb-20 opacity-60 uppercase text-center">TAME IMPALA</h2>
+        <button onclick="goTo('room')" class="btn-main">ENTRAR</button>
+        <p id="view-footer" class="text-[8px] mt-12 uppercase opacity-40 tracking-widest px-8"></p>
     </div>
 
+    <!-- P2: Room -->
     <div id="screen-room" class="screen">
-        <h2 id="text-room-header" class="text-[9px] font-black uppercase tracking-[0.4em] mb-10 opacity-60">CONSTRUCCIÓN DEL ENTORNO</h2>
+        <h2 class="text-[10px] font-black uppercase tracking-[0.4em] mb-10 opacity-50">TU ENTORNO</h2>
         <div class="grid grid-cols-3 gap-3 w-full max-w-[320px] aspect-square" id="objects-grid"></div>
-        <p id="room-instruction" class="mt-12 text-[9px] opacity-40 uppercase tracking-widest px-6">ELIGE 3 ELEMENTOS QUE DEFINAN TU AHORA</p>
+        <p class="mt-12 text-[9px] opacity-40 uppercase tracking-widest px-6">SELECCIONA 3 ELEMENTOS</p>
     </div>
 
+    <!-- P3: Voice -->
     <div id="screen-voice" class="screen">
-        <h2 id="text-voice-header" class="text-[9px] font-black uppercase tracking-[0.4em] mb-16 opacity-60">SINTONÍA DE CONCIENCIA</h2>
+        <h2 class="text-[10px] font-black uppercase tracking-[0.4em] mb-16 opacity-50">SINTONÍA</h2>
         <div class="flex flex-col gap-12">
-            <button onclick="setVoice('kind')" id="text-voice-kind" class="voice-btn">Amable</button>
-            <div class="h-[1px] bg-white/10 w-24 mx-auto"></div>
-            <button onclick="setVoice('critical')" id="text-voice-critical" class="voice-btn">Crítica</button>
+            <button onclick="setVoice('kind')" class="voice-btn">Amable</button>
+            <button onclick="setVoice('critical')" class="voice-btn">Crítica</button>
         </div>
     </div>
 
+    <!-- P4: Loading -->
     <div id="screen-loading" class="screen">
-        <div class="w-10 h-10 border-2 border-white/5 border-t-orange-500 rounded-full animate-spin mb-8"></div>
-        <p id="loading-msg" class="typewriter text-[9px] uppercase tracking-[0.3em] animate-pulse px-6">PROCESANDO RESONANCIA ARMÓNICA...</p>
+        <div class="w-12 h-12 border-2 border-white/10 border-t-orange-500 rounded-full animate-spin mb-6"></div>
+        <p class="typewriter text-[10px] uppercase tracking-widest animate-pulse">SINTONIZANDO...</p>
     </div>
 
-    <!-- Pantalla de Resultados Optimizada -->
+    <!-- P5: Result -->
     <div id="screen-result" class="screen">
-        <div class="max-w-md w-full px-6 flex flex-col items-center justify-center">
-            <p class="text-[9px] font-black text-orange-500 uppercase tracking-[0.3em] mb-6">RESONANCIA ENCONTRADA</p>
-            
-            <h3 id="res-title" class="text-4xl sm:text-6xl font-black uppercase tracking-tighter mb-6 leading-none text-center"></h3>
-            
-            <div class="h-[1px] bg-white/20 w-12 mb-8"></div>
-            
-            <p id="res-desc" class="typewriter text-xs sm:text-sm leading-relaxed mb-6 opacity-90 text-center max-w-[280px]"></p>
-            
-            <p id="res-critique" class="typewriter text-[10px] sm:text-[11px] italic opacity-40 mb-12 text-center border-t border-white/10 pt-6 px-4"></p>
-            
-            <div class="flex flex-col gap-4 w-full items-center">
-                <a id="res-link" href="#" target="_blank" class="btn-main text-center">ESCUCHAR AHORA</a>
-                <button onclick="location.reload()" class="text-[8px] uppercase font-bold opacity-30 mt-6 tracking-[0.4em] hover:opacity-100 transition">REINICIAR VIAJE</button>
-            </div>
+        <div class="max-w-[340px] w-full flex flex-col items-center">
+            <span class="text-[9px] font-black text-orange-500 tracking-[0.4em] mb-4 uppercase">RESONANCIA</span>
+            <h3 id="res-title" class="text-4xl font-black uppercase tracking-tighter mb-4 leading-tight text-center"></h3>
+            <div class="w-10 h-[1px] bg-white/20 mb-8"></div>
+            <p id="res-desc" class="typewriter text-xs leading-relaxed mb-6 opacity-80 px-4"></p>
+            <p id="res-critique" class="typewriter text-[10px] italic opacity-40 mb-10 border-t border-white/5 pt-6 px-4"></p>
+            <a id="res-link" href="#" target="_blank" class="btn-main text-center">ESCUCHAR</a>
+            <button onclick="location.reload()" class="text-[8px] uppercase tracking-widest opacity-30 mt-8">VOLVER AL INICIO</button>
         </div>
     </div>
 
+    <!-- PANEL ADMIN -->
     <div id="admin-panel">
-        <div class="p-6 bg-[#111] border-b border-white/10 flex justify-between items-center">
-            <h2 class="font-black text-orange-500 uppercase tracking-tighter">Configuración</h2>
-            <button onclick="closeAdmin()" class="text-xs uppercase font-bold">Cerrar</button>
+        <div class="p-6 bg-zinc-900 flex justify-between items-center border-b border-white/10">
+            <h3 class="font-bold text-orange-500 text-sm">ADMINISTRACIÓN</h3>
+            <button onclick="closeAdmin()" class="text-xs opacity-50 uppercase">Cerrar</button>
         </div>
-        <div class="admin-content">
-            <label class="text-[10px] uppercase opacity-40 block mb-2">Título Principal</label>
-            <input type="text" id="admin-title" class="w-full bg-[#1a1a1a] p-3 rounded mb-4 text-sm border border-white/5">
-            <label class="text-[10px] uppercase opacity-40 block mb-2">Subtítulo</label>
-            <input type="text" id="admin-subtitle" class="w-full bg-[#1a1a1a] p-3 rounded mb-4 text-sm border border-white/5">
-            <label class="text-[10px] uppercase opacity-40 block mb-2">Créditos / Firma</label>
-            <input type="text" id="admin-author" class="w-full bg-[#1a1a1a] p-3 rounded mb-4 text-sm border border-white/5">
-            <label class="text-[10px] uppercase opacity-40 block mb-2">URL del Video de Fondo</label>
-            <input type="text" id="admin-bg-url" class="w-full bg-[#1a1a1a] p-3 rounded mb-4 text-sm border border-white/5">
-            
-            <button onclick="updateAndSaveConfig()" class="w-full bg-orange-600 py-4 font-black uppercase text-xs rounded mt-6">Sincronizar Cambios</button>
+        <div class="admin-content" id="admin-form">
+            <!-- Campos dinámicos aquí -->
+        </div>
+        <div class="p-4 bg-zinc-900">
+            <button onclick="saveAdmin()" class="w-full bg-orange-600 py-4 font-bold text-xs uppercase rounded">Guardar Cambios</button>
         </div>
     </div>
 
@@ -193,159 +169,194 @@
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
-        let currentConfig = {
-            title: "INNERSPEAKER", 
-            subtitle: "TAME IMPALA", 
-            color1: "#c87c4a", 
-            color2: "#4b6a4a", 
-            bgUrl: "https://cdn.pixabay.com/video/2024/08/05/224962_large.mp4", 
-            textAuthor: "DISEÑADO POR ANDRÉ D'LYNAE • UNA EXPERIENCIA PSICODÉLICA",
-            textRoomHeader: "CONSTRUCCIÓN DEL ENTORNO", 
-            textRoomInstruction: "ELIGE 3 ELEMENTOS QUE DEFINAN TU AHORA", 
-            textVoiceHeader: "SINTONÍA DE CONCIENCIA", 
-            textLoading: "PROCESANDO RESONANCIA ARMÓNICA...",
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'innerspeaker-pro-v3';
+        
+        // Configuración Maestra (11 Canciones)
+        let config = {
+            title: "INNERSPEAKER",
+            subtitle: "TAME IMPALA",
+            footer: "POR ANDRÉ D'LYNAE • PSICODELIA PURA",
+            bgUrl: "https://cdn.pixabay.com/video/2024/08/05/224962_large.mp4",
             songs: [
-                { title: "It Is Not Meant To Be", desc: "La sensación de que algo está fuera de tu alcance.", critique: "Aceptación de lo imposible.", url: "https://youtu.be/3a7jLiSCtfU" },
-                { title: "Alter Ego", desc: "La única persona que puede cambiarte eres tú mismo.", critique: "Conversación interna necesaria.", url: "https://youtu.be/VpLXxFhy7s4" },
-                { title: "Solitude Is Bliss", desc: "Soledad por elección, la mayor libertad posible.", critique: "Independencia pura.", url: "https://youtu.be/N7eGu_p2jLk" },
-                { title: "Lucidity", desc: "Momentos breves donde todo parece tener un sentido geométrico.", critique: "El despertar repentino.", url: "https://youtu.be/fM_LIsA3vH8" },
-                { title: "Expectation", desc: "La brecha dolorosa entre la imagen mental y la realidad física.", critique: "Realismo psicodélico.", url: "https://youtu.be/i6Hm8SJF668" }
+                { id: 0, title: "It Is Not Meant To Be", desc: "La sensación de lo inalcanzable.", crit: "Acepta que algunas cosas no son.", url: "https://youtu.be/3a7jLiSCtfU" },
+                { id: 1, title: "Desire Be Desire Go", desc: "El deseo es una rueda que no para.", crit: "Deja ir la necesidad de control.", url: "https://youtu.be/Mc8LpXv_Xv0" },
+                { id: 2, title: "Alter Ego", desc: "La única persona que te cambia eres tú.", crit: "Tu peor enemigo eres tú.", url: "https://youtu.be/VpLXxFhy7s4" },
+                { id: 3, title: "Lucidity", desc: "Un destello de claridad geométrica.", crit: "La verdad duele pero libera.", url: "https://youtu.be/fM_LIsA3vH8" },
+                { id: 4, title: "Why Won't You Make Up Your Mind?", desc: "Indecisión en un bucle eterno.", crit: "La parálisis es muerte.", url: "https://youtu.be/Mv07Quv60S4" },
+                { id: 5, title: "Solitude Is Bliss", desc: "No hay nadie aquí, y es perfecto.", crit: "Nadie te necesita tanto como crees.", url: "https://youtu.be/N7eGu_p2jLk" },
+                { id: 6, title: "Jeremy's Storm", desc: "Tormenta instrumental sin palabras.", crit: "El caos también tiene orden.", url: "https://youtu.be/XyS0_eYp8X4" },
+                { id: 7, title: "Expectation", desc: "La brecha entre mente y realidad.", crit: "Tus expectativas son tu prisión.", url: "https://youtu.be/i6Hm8SJF668" },
+                { id: 8, title: "The Bold Arrow of Time", desc: "El tiempo solo va en una dirección.", crit: "El pasado es un peso muerto.", url: "https://youtu.be/K-8C0q_97G8" },
+                { id: 9, title: "Runway, Houses, City, Clouds", desc: "Viendo el mundo desde arriba.", crit: "Todo parece pequeño desde aquí.", url: "https://youtu.be/Yp83uUv96vI" },
+                { id: 10, title: "I Don't Really Mind", desc: "Al final, nada importa tanto.", crit: "Relájate, nada es tan grave.", url: "https://youtu.be/E-i_FNoV94E" }
             ]
         };
 
-        const OBJECT_MAP = {
-            'Audífonos': ['Alter Ego', 'Solitude Is Bliss'], 'Espejo': ['Alter Ego', 'Expectation'], 'Ventana': ['Lucidity'],
-            'Libreta': ['Expectation'], 'Silla': ['It Is Not Meant To Be'], 'Reloj': ['Expectation'],
-            'Lámpara': ['Lucidity'], 'Vinilo': ['It Is Not Meant To Be'], 'Cama': ['Solitude Is Bliss']
-        };
-
+        const OBJECTS = ['Espejo', 'Ventana', 'Reloj', 'Libreta', 'Audífonos', 'Vinilo', 'Cama', 'Lámpara', 'Silla'];
         let db, auth, user, selected = [];
 
-        function setupFirebase() {
+        async function init() {
             try {
                 const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-                if (!configStr) { applyConfig(); return; }
-                const conf = JSON.parse(configStr);
-                const app = initializeApp(conf);
+                if (!configStr) { apply(); setupUI(); return; }
+                
+                const app = initializeApp(JSON.parse(configStr));
                 db = getFirestore(app);
                 auth = getAuth(app);
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'innerspeaker-pro';
 
                 onAuthStateChanged(auth, u => {
                     user = u;
                     if (u) {
                         onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'main'), snap => {
-                            if (snap.exists()) { currentConfig = {...currentConfig, ...snap.data()}; applyConfig(); }
+                            if (snap.exists()) { config = {...config, ...snap.data()}; apply(); }
                         });
                     }
                 });
 
-                const initAuth = async () => {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                };
-                initAuth();
-            } catch (e) { applyConfig(); }
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (e) { apply(); }
+            setupUI();
         }
 
-        function applyConfig() {
-            document.getElementById('editable-title').innerText = currentConfig.title;
-            document.getElementById('editable-subtitle').innerText = currentConfig.subtitle;
-            document.getElementById('status-text').innerText = currentConfig.textAuthor;
-            document.getElementById('text-room-header').innerText = currentConfig.textRoomHeader;
-            document.getElementById('room-instruction').innerText = currentConfig.textRoomInstruction;
-            document.getElementById('text-voice-header').innerText = currentConfig.textVoiceHeader;
-            document.getElementById('loading-msg').innerText = currentConfig.textLoading;
+        function apply() {
+            document.getElementById('view-title').innerText = config.title;
+            document.getElementById('view-subtitle').innerText = config.subtitle;
+            document.getElementById('view-footer').innerText = config.footer;
 
-            const videoE = document.getElementById('bg-video');
-            if (currentConfig.bgUrl) {
-                videoE.src = currentConfig.bgUrl;
-                videoE.oncanplay = () => videoE.style.opacity = "0.4";
+            const video = document.getElementById('bg-video');
+            const img = document.getElementById('bg-image');
+            const url = config.bgUrl;
+
+            const isVideo = url.match(/\.(mp4|webm|ogg)$/) || url.includes('pixabay.com/video');
+
+            if (isVideo) {
+                img.style.opacity = "0";
+                video.src = url;
+                video.style.opacity = "0.4";
+                video.play().catch(() => {});
+            } else {
+                video.style.opacity = "0";
+                img.src = url;
+                img.style.opacity = "0.4";
             }
         }
 
+        function setupUI() {
+            const grid = document.getElementById('objects-grid');
+            grid.innerHTML = '';
+            OBJECTS.forEach(obj => {
+                const btn = document.createElement('button');
+                btn.className = 'object-btn'; btn.innerText = obj;
+                btn.onclick = () => {
+                    if (selected.includes(obj)) {
+                        selected = selected.filter(x => x !== obj);
+                        btn.classList.remove('selected');
+                    } else if (selected.length < 3) {
+                        selected.push(obj);
+                        btn.classList.add('selected');
+                        if (selected.length === 3) setTimeout(() => goTo('voice'), 400);
+                    }
+                };
+                grid.appendChild(btn);
+            });
+        }
+
         window.goTo = (id) => {
-            const screens = document.querySelectorAll('.screen');
-            screens.forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.screen').forEach(s => {
+                s.classList.remove('active');
+                setTimeout(() => s.style.display = 'none', 600);
+            });
             setTimeout(() => {
-                screens.forEach(s => s.style.display = 'none');
                 const target = document.getElementById(`screen-${id}`);
                 target.style.display = 'flex';
                 setTimeout(() => target.classList.add('active'), 50);
-            }, 600);
+            }, 650);
         };
 
-        const grid = document.getElementById('objects-grid');
-        Object.keys(OBJECT_MAP).forEach(obj => {
-            const btn = document.createElement('button');
-            btn.className = 'object-btn'; btn.innerText = obj;
-            btn.onclick = () => {
-                if (selected.includes(obj)) {
-                    selected = selected.filter(x => x !== obj);
-                    btn.classList.remove('selected');
-                } else if (selected.length < 3) {
-                    selected.push(obj);
-                    btn.classList.add('selected');
-                    if (selected.length === 3) setTimeout(() => goTo('voice'), 400);
-                }
-            };
-            grid.appendChild(btn);
-        });
-
-        window.setVoice = (v) => {
+        window.setVoice = (vType) => {
             goTo('loading');
             setTimeout(() => {
-                const song = currentConfig.songs[Math.floor(Math.random() * currentConfig.songs.length)];
+                // Lógica de sintonía: selecciona una canción de la lista editada
+                const index = Math.floor(Math.random() * config.songs.length);
+                const song = config.songs[index];
+                
                 document.getElementById('res-title').innerText = song.title;
                 document.getElementById('res-desc').innerText = song.desc;
-                document.getElementById('res-critique').innerText = song.critique;
+                document.getElementById('res-critique').innerText = vType === 'kind' ? "Sintonía amable: " + song.crit : "Crítica interna: " + song.crit;
                 document.getElementById('res-link').href = song.url;
                 goTo('result');
             }, 2500);
         };
 
+        // ADMIN FUNCTIONS
         window.openLogin = () => {
-            const p = prompt("Acceso Administrador:");
+            const p = prompt("Código:");
             if (p === 'notasdazul') {
-                document.getElementById('admin-panel').classList.add('open');
-                document.getElementById('admin-title').value = currentConfig.title;
-                document.getElementById('admin-subtitle').value = currentConfig.subtitle;
-                document.getElementById('admin-author').value = currentConfig.textAuthor;
-                document.getElementById('admin-bg-url').value = currentConfig.bgUrl;
+                const panel = document.getElementById('admin-panel');
+                panel.classList.add('open');
+                renderAdmin();
             }
         };
-
         window.closeAdmin = () => document.getElementById('admin-panel').classList.remove('open');
 
-        window.updateAndSaveConfig = async () => {
-            if (!db || !user) return alert("Error de conexión");
-            const data = {
-                ...currentConfig,
-                title: document.getElementById('admin-title').value,
-                subtitle: document.getElementById('admin-subtitle').value,
-                textAuthor: document.getElementById('admin-author').value,
-                bgUrl: document.getElementById('admin-bg-url').value
-            };
-            await setDoc(doc(db, 'artifacts', typeof __app_id !== 'undefined' ? __app_id : 'innerspeaker-pro', 'public', 'data', 'config', 'main'), data);
-            alert("Sincronizado");
-            closeAdmin();
-        };
-
-        const tc = document.getElementById('trees-container');
-        for(let i=0; i<8; i++) {
-            const t = document.createElement('div'); t.className = 'tree';
-            t.innerHTML = `<svg viewBox="0 0 100 100"><path d="M50 10 L85 90 L15 90 Z" fill="currentColor"/></svg>`;
-            t.style.left = `${Math.random()*100}%`;
-            t.style.top = `${Math.random()*100}%`;
-            t.style.animation = `zoomTree ${15 + Math.random()*20}s infinite linear`;
-            t.style.animationDelay = `${-Math.random()*20}s`;
-            tc.appendChild(t);
+        function renderAdmin() {
+            const form = document.getElementById('admin-form');
+            let html = `
+                <label class="text-[10px] uppercase opacity-50 mb-1 block">Título Web</label>
+                <input type="text" id="in-title" class="admin-input" value="${config.title}">
+                <label class="text-[10px] uppercase opacity-50 mb-1 block">Subtítulo</label>
+                <input type="text" id="in-subtitle" class="admin-input" value="${config.subtitle}">
+                <label class="text-[10px] uppercase opacity-50 mb-1 block">Créditos</label>
+                <input type="text" id="in-footer" class="admin-input" value="${config.footer}">
+                <label class="text-[10px] uppercase opacity-50 mb-1 block">URL Fondo (Vídeo o Foto)</label>
+                <input type="text" id="in-bg" class="admin-input" value="${config.bgUrl}">
+                
+                <h4 class="text-orange-500 font-bold text-xs mt-6 mb-4 uppercase">Gestión de Canciones (11)</h4>
+            `;
+            
+            config.songs.forEach((s, i) => {
+                html += `
+                    <div class="mb-6 p-3 bg-white/5 rounded">
+                        <label class="text-[9px] opacity-40">Canción ${i+1}</label>
+                        <input type="text" id="song-t-${i}" class="admin-input mt-1" placeholder="Título" value="${s.title}">
+                        <input type="text" id="song-d-${i}" class="admin-input" placeholder="Descripción" value="${s.desc}">
+                        <input type="text" id="song-u-${i}" class="admin-input" placeholder="Enlace YouTube/Spotify" value="${s.url}">
+                    </div>
+                `;
+            });
+            form.innerHTML = html;
         }
 
-        setupFirebase();
+        window.saveAdmin = async () => {
+            if (!user) return alert("Error de Auth");
+            
+            const updatedSongs = config.songs.map((s, i) => ({
+                ...s,
+                title: document.getElementById(`song-t-${i}`).value,
+                desc: document.getElementById(`song-d-${i}`).value,
+                url: document.getElementById(`song-u-${i}`).value
+            }));
+
+            const newConfig = {
+                title: document.getElementById('in-title').value,
+                subtitle: document.getElementById('in-subtitle').value,
+                footer: document.getElementById('in-footer').value,
+                bgUrl: document.getElementById('in-bg').value,
+                songs: updatedSongs
+            };
+
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'main'), newConfig);
+                alert("Configuración sincronizada en la nube.");
+                closeAdmin();
+            } catch(e) { alert("Error al guardar: " + e.message); }
+        };
+
+        init();
     </script>
 </body>
 </html>
