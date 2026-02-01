@@ -59,7 +59,7 @@
         .screen {
             display: none; position: absolute; inset: 0;
             flex-direction: column; align-items: center;
-            justify-content: center; padding: 1rem;
+            justify-content: center; padding: 1.5rem;
             text-align: center; opacity: 0;
             transition: opacity 0.8s ease; z-index: 10;
         }
@@ -76,43 +76,41 @@
 
         .object-btn.selected { background: var(--autumn-orange); color: white; border-color: var(--autumn-orange); transform: scale(0.95); }
 
-        .voice-btn { font-family: 'Permanent Marker', cursive; font-size: 2rem; transition: color 0.3s, transform 0.3s; }
+        .voice-btn { font-family: 'Permanent Marker', cursive; font-size: 2.5rem; transition: color 0.3s, transform 0.3s; }
 
         @media (min-width: 640px) {
-            .voice-btn { font-size: 3.5rem; }
-            .object-btn { font-size: 0.8rem; padding: 1.5rem; }
+            .voice-btn { font-size: 4rem; }
+            .object-btn { font-size: 0.85rem; padding: 1.5rem; }
         }
 
         .typewriter { font-family: 'Special Elite', serif; }
 
         .btn-main {
-            border: 1px solid var(--text-off); padding: 0.8rem 2rem;
-            text-transform: uppercase; font-weight: 900; letter-spacing: 0.25em;
-            font-size: 0.75rem; transition: all 0.3s;
+            border: 1px solid var(--text-off); padding: 1rem 2.5rem;
+            text-transform: uppercase; font-weight: 900; letter-spacing: 0.3em;
+            font-size: 0.8rem; transition: all 0.3s;
             background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); cursor: pointer;
         }
 
         .btn-main:hover { background: var(--text-off); color: var(--bg-deep); }
 
-        #secret-trigger { position: fixed; top: 0; right: 0; width: 60px; height: 60px; z-index: 9999; cursor: pointer; }
+        #secret-trigger { position: fixed; bottom: 0; right: 0; width: 50px; height: 50px; z-index: 9999; cursor: pointer; opacity: 0; }
 
-        /* Admin Panel v2 */
+        /* Admin Panel */
         #admin-panel {
-            position: fixed; top: 0; right: -100%; width: 100%; max-width: 500px; height: 100%;
-            background: #0f0f0f; color: #eee; z-index: 10000; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed; top: 0; right: -100%; width: 100%; max-width: 550px; height: 100%;
+            background: #0a0a0a; color: #eee; z-index: 10000; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex; flex-direction: column; border-left: 1px solid #333;
         }
         #admin-panel.open { right: 0; }
         
         .admin-content { flex: 1; overflow-y: auto; padding: 2rem; }
-        .admin-header { padding: 1.5rem 2rem; background: #1a1a1a; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
-        .admin-footer { padding: 1.5rem 2rem; background: #1a1a1a; border-top: 1px solid #333; }
-        
-        .admin-section-title { font-size: 10px; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; color: #666; margin-bottom: 1rem; margin-top: 2rem; border-bottom: 1px solid #222; padding-bottom: 0.5rem; }
-        .admin-input { background: #181818; border: 1px solid #333; color: white; width: 100%; padding: 0.8rem; margin-bottom: 0.8rem; font-size: 0.85rem; border-radius: 4px; outline: none; }
+        .admin-header { padding: 1.5rem 2rem; background: #151515; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .admin-input { background: #151515; border: 1px solid #333; color: white; width: 100%; padding: 0.8rem; margin-bottom: 0.8rem; font-size: 0.85rem; border-radius: 4px; outline: none; }
         .admin-input:focus { border-color: var(--autumn-orange); }
+        .admin-section-title { font-size: 11px; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; color: var(--autumn-orange); margin: 2rem 0 1rem 0; border-bottom: 1px solid #222; padding-bottom: 0.5rem; }
 
-        .song-card { background: #1a1a1a; border: 1px solid #333; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+        .song-card { background: #151515; border: 1px solid #333; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; }
     </style>
 </head>
 <body>
@@ -125,77 +123,88 @@
 
     <div id="secret-trigger" onclick="openLogin()"></div>
 
-    <!-- PANTALLAS -->
+    <!-- Pantalla de Inicio -->
     <div id="screen-landing" class="screen active">
-        <h1 id="editable-title" class="text-5xl sm:text-8xl font-black tracking-tighter mb-2">INNERSPEAKER</h1>
-        <h2 id="editable-subtitle" class="text-sm sm:text-2xl font-light tracking-[0.4em] mb-12 sm:mb-20 opacity-80 uppercase">TAME IMPALA</h2>
-        <button onclick="goTo('room')" class="btn-main">ACCEDER</button>
-        <p id="status-text" class="text-[8px] sm:text-[10px] mt-10 uppercase opacity-50 tracking-widest px-4 leading-relaxed"></p>
+        <h1 id="editable-title" class="text-6xl sm:text-9xl font-black tracking-tighter mb-4">INNERSPEAKER</h1>
+        <h2 id="editable-subtitle" class="text-sm sm:text-2xl font-light tracking-[0.5em] mb-16 sm:mb-24 opacity-80 uppercase">TAME IMPALA</h2>
+        <button onclick="goTo('room')" class="btn-main">EMPEZAR EXPERIENCIA</button>
+        <p id="status-text" class="text-[9px] sm:text-[11px] mt-12 uppercase opacity-40 tracking-widest px-4 max-w-xs mx-auto leading-relaxed"></p>
     </div>
 
+    <!-- Selección de Objetos -->
     <div id="screen-room" class="screen">
-        <h2 id="text-room-header" class="text-[9px] font-black uppercase tracking-[0.4em] mb-6 opacity-40"></h2>
-        <div class="grid grid-cols-3 gap-2 w-full max-w-sm aspect-square" id="objects-grid"></div>
-        <p id="room-instruction" class="mt-8 text-[9px] opacity-40 uppercase tracking-widest"></p>
+        <h2 id="text-room-header" class="text-[10px] font-black uppercase tracking-[0.4em] mb-8 opacity-50"></h2>
+        <div class="grid grid-cols-3 gap-3 w-full max-w-sm aspect-square" id="objects-grid"></div>
+        <p id="room-instruction" class="mt-10 text-[10px] opacity-40 uppercase tracking-widest"></p>
     </div>
 
+    <!-- Selección de Voz -->
     <div id="screen-voice" class="screen">
-        <h2 id="text-voice-header" class="text-[9px] font-black uppercase tracking-[0.4em] mb-12 opacity-40"></h2>
-        <div class="flex flex-col gap-6">
+        <h2 id="text-voice-header" class="text-[10px] font-black uppercase tracking-[0.4em] mb-16 opacity-50"></h2>
+        <div class="flex flex-col gap-10">
             <button onclick="setVoice('kind')" id="text-voice-kind" class="voice-btn hover:text-orange-400">Amable</button>
-            <div class="h-[1px] bg-white/10 w-24 mx-auto"></div>
+            <div class="h-[1px] bg-white/10 w-32 mx-auto"></div>
             <button onclick="setVoice('critical')" id="text-voice-critical" class="voice-btn hover:text-orange-400">Crítica</button>
         </div>
     </div>
 
+    <!-- Carga -->
     <div id="screen-loading" class="screen">
-        <div class="w-10 h-10 border-2 border-white/5 border-t-orange-500 rounded-full animate-spin mb-6"></div>
-        <p id="loading-msg" class="typewriter text-[9px] uppercase tracking-[0.3em] animate-pulse"></p>
+        <div class="w-12 h-12 border-2 border-white/10 border-t-orange-500 rounded-full animate-spin mb-8"></div>
+        <p id="loading-msg" class="typewriter text-[10px] uppercase tracking-[0.4em] animate-pulse"></p>
     </div>
 
+    <!-- Resultado Final -->
     <div id="screen-result" class="screen">
-        <div class="max-w-md w-full px-4 text-center sm:text-left">
-            <h3 id="res-title" class="text-3xl sm:text-6xl font-black uppercase tracking-tighter mb-4"></h3>
-            <p id="res-tag" class="text-[9px] font-bold text-orange-400 uppercase tracking-widest mb-4 opacity-80">Track Sugerido</p>
-            <div class="h-[1px] bg-white/10 w-full mb-6"></div>
-            <p id="res-desc" class="typewriter text-xs sm:text-base leading-relaxed mb-6 opacity-90"></p>
-            <p id="res-critique" class="typewriter text-[10px] sm:text-[11px] italic opacity-40 mb-10"></p>
-            <div class="flex flex-col gap-4 items-center sm:items-start">
-                <a id="res-link" href="#" target="_blank" class="btn-main w-full sm:w-auto text-center">Escuchar ahora</a>
-                <button onclick="location.reload()" class="text-[8px] uppercase font-black opacity-30 hover:opacity-100 tracking-[0.3em] mt-4">Reiniciar</button>
+        <div class="max-w-lg w-full px-6 text-center sm:text-left">
+            <p id="res-tag" class="text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-4">Sintonía Encontrada</p>
+            <h3 id="res-title" class="text-4xl sm:text-7xl font-black uppercase tracking-tighter mb-6"></h3>
+            <div class="h-[1px] bg-white/20 w-full mb-8"></div>
+            <p id="res-desc" class="typewriter text-sm sm:text-lg leading-relaxed mb-8 opacity-90"></p>
+            <p id="res-critique" class="typewriter text-[11px] sm:text-[13px] italic opacity-50 mb-12 border-l-2 border-orange-500/30 pl-4"></p>
+            <div class="flex flex-col sm:flex-row gap-6 items-center">
+                <a id="res-link" href="#" target="_blank" class="btn-main w-full sm:w-auto text-center">ESCUCHAR EN YOUTUBE</a>
+                <button onclick="location.reload()" class="text-[9px] uppercase font-black opacity-30 hover:opacity-100 tracking-[0.3em]">Reiniciar Viaje</button>
             </div>
         </div>
     </div>
 
-    <!-- PANEL ADMIN -->
+    <!-- Panel de Administración -->
     <div id="admin-panel">
         <div class="admin-header">
-            <h2 class="font-black text-orange-500 text-xl uppercase tracking-tighter">Inner-Editor PRO</h2>
-            <button onclick="closeAdmin()" class="text-[10px] bg-white/5 px-3 py-1 rounded hover:bg-white/10 uppercase font-bold">Cerrar</button>
+            <h2 class="font-black text-orange-500 text-xl uppercase tracking-tighter">Editor de Experiencia</h2>
+            <button onclick="closeAdmin()" class="text-[10px] bg-white/10 px-4 py-2 rounded hover:bg-white/20 uppercase font-bold">Cerrar</button>
         </div>
         <div class="admin-content">
-            <div class="admin-section-title">Visuales</div>
-            <input type="text" id="admin-title" placeholder="Título" class="admin-input">
-            <input type="text" id="admin-subtitle" placeholder="Subtítulo" class="admin-input">
-            <input type="text" id="admin-author" placeholder="Firma" class="admin-input">
-            <div class="grid grid-cols-2 gap-2">
-                <input type="color" id="admin-c1" class="admin-input h-10 p-1">
-                <input type="color" id="admin-c2" class="admin-input h-10 p-1">
+            <div class="admin-section-title">Identidad Visual</div>
+            <label class="text-[9px] opacity-40 uppercase mb-1 block">Título Principal</label>
+            <input type="text" id="admin-title" class="admin-input">
+            <label class="text-[9px] opacity-40 uppercase mb-1 block">Subtítulo</label>
+            <input type="text" id="admin-subtitle" class="admin-input">
+            <label class="text-[9px] opacity-40 uppercase mb-1 block">Firma/Créditos</label>
+            <input type="text" id="admin-author" class="admin-input">
+            
+            <div class="admin-section-title">Colores de Degradado</div>
+            <div class="grid grid-cols-2 gap-4">
+                <input type="color" id="admin-c1" class="admin-input h-12 p-1">
+                <input type="color" id="admin-c2" class="admin-input h-12 p-1">
             </div>
-            <label class="text-[9px] opacity-40 uppercase mb-1 block">URL Fondo (Imagen o Video)</label>
-            <input type="text" id="admin-bg-url" class="admin-input">
 
-            <div class="admin-section-title">Textos de Interacción</div>
+            <div class="admin-section-title">Multimedia de Fondo</div>
+            <label class="text-[9px] opacity-40 uppercase mb-1 block">URL (Imagen o Video MP4 Directo)</label>
+            <input type="text" id="admin-bg-url" class="admin-input" placeholder="https://ejemplo.com/video.mp4">
+
+            <div class="admin-section-title">Textos de Interfaz</div>
             <input type="text" id="admin-txt-room" placeholder="Cabecera Objetos" class="admin-input">
             <input type="text" id="admin-txt-inst" placeholder="Instrucción Objetos" class="admin-input">
             <input type="text" id="admin-txt-voice" placeholder="Cabecera Voz" class="admin-input">
             <input type="text" id="admin-txt-load" placeholder="Mensaje Carga" class="admin-input">
 
-            <div class="admin-section-title">Canciones & YouTube</div>
+            <div class="admin-section-title">Base de Datos de Canciones</div>
             <div id="songs-editor-list"></div>
         </div>
-        <div class="admin-footer">
-            <button onclick="updateAndSaveConfig()" class="w-full bg-orange-600 hover:bg-orange-500 py-4 text-[11px] font-black uppercase rounded shadow-lg transition">Guardar Cambios</button>
+        <div class="admin-footer p-6 border-t border-white/10">
+            <button onclick="updateAndSaveConfig()" class="w-full bg-orange-600 hover:bg-orange-500 py-4 text-[12px] font-black uppercase rounded shadow-2xl transition">Guardar Cambios en la Nube</button>
         </div>
     </div>
 
@@ -204,27 +213,35 @@
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
-        const fbConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(fbConfig);
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'innerspeaker-v2';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'innerspeaker-pro';
 
         let currentConfig = {
-            title: "INNERSPEAKER", subtitle: "TAME IMPALA", color1: "#c87c4a", color2: "#4b6a4a", bgUrl: "", textAuthor: "Producido por André d'Lynae",
-            textRoomHeader: "Percepción del entorno", textRoomInstruction: "Elige 3 fragmentos de tu realidad", textVoiceHeader: "Sintonía Mental", textLoading: "Buscando resonancia...",
+            title: "INNERSPEAKER", 
+            subtitle: "TAME IMPALA", 
+            color1: "#c87c4a", 
+            color2: "#4b6a4a", 
+            bgUrl: "", 
+            textAuthor: "DISEÑADO POR ANDRÉ D'LYNAE • UNA EXPERIENCIA PSICODÉLICA",
+            textRoomHeader: "CONSTRUCCIÓN DEL ENTORNO", 
+            textRoomInstruction: "ELIGE 3 ELEMENTOS QUE DEFINAN TU AHORA", 
+            textVoiceHeader: "SINTONÍA DE CONCIENCIA", 
+            textLoading: "PROCESANDO RESONANCIA ARMÓNICA...",
             songs: [
                 { title: "It Is Not Meant To Be", desc: "La sensación de que algo está fuera de tu alcance.", critique: "Aceptación de lo imposible.", url: "https://youtu.be/3a7jLiSCtfU" },
-                { title: "Desire Be Desire Go", desc: "El deseo es una fuerza que fluye y se desvanece.", critique: "Fuga cerebral.", url: "https://youtu.be/L_u7IPrN2-8" },
-                { title: "Alter Ego", desc: "La única persona que puede cambiarte eres tú.", critique: "Conversación interna.", url: "https://youtu.be/VpLXxFhy7s4" },
-                { title: "Lucidity", desc: "Momentos breves donde todo tiene sentido.", critique: "El despertar.", url: "https://youtu.be/fM_LIsA3vH8" },
-                { title: "Why Won’t You Make Up Your Mind?", desc: "Parálisis por análisis.", critique: "Bucle infinito.", url: "https://youtu.be/CwIV58Fk6GQ" },
-                { title: "Solitude Is Bliss", desc: "Soledad por elección.", critique: "Independencia pura.", url: "https://youtu.be/N7eGu_p2jLk" },
-                { title: "Jeremy's Storm", desc: "Tormenta que limpia el ruido.", critique: "Limpieza sónica.", url: "https://youtu.be/kU_pLgPscvA" },
-                { title: "Expectation", desc: "Brecha entre imagen y realidad.", critique: "Realismo psicodélico.", url: "https://youtu.be/i6Hm8SJF668" },
-                { title: "The Bold Arrow Of Time", desc: "El tiempo como flecha pesada.", critique: "Anacronismo.", url: "https://youtu.be/S4pI6v_YQwI" },
-                { title: "Runway, Houses, City, Clouds", desc: "Mirar el mundo desde lo más alto.", critique: "Viaje astral.", url: "https://youtu.be/t_uI-H09_f0" },
-                { title: "I Don't Really Mind", desc: "Al final, nada importa tanto como la calma.", critique: "Cierre de ciclo.", url: "https://youtu.be/q09R69Yf0Hk" }
+                { title: "Desire Be Desire Go", desc: "El deseo es una fuerza que fluye y se desvanece.", critique: "Fuga cerebral constante.", url: "https://youtu.be/L_u7IPrN2-8" },
+                { title: "Alter Ego", desc: "La única persona que puede cambiarte eres tú mismo.", critique: "Conversación interna necesaria.", url: "https://youtu.be/VpLXxFhy7s4" },
+                { title: "Lucidity", desc: "Momentos breves donde todo parece tener un sentido geométrico.", critique: "El despertar repentino.", url: "https://youtu.be/fM_LIsA3vH8" },
+                { title: "Why Won’t You Make Up Your Mind?", desc: "Parálisis por análisis en un bucle infinito.", critique: "Duda existencial rítmica.", url: "https://youtu.be/CwIV58Fk6GQ" },
+                { title: "Solitude Is Bliss", desc: "Soledad por elección, la mayor libertad posible.", critique: "Independencia pura.", url: "https://youtu.be/N7eGu_p2jLk" },
+                { title: "Jeremy's Storm", desc: "Una tormenta interna que limpia el ruido innecesario.", critique: "Limpieza sónica profunda.", url: "https://youtu.be/kU_pLgPscvA" },
+                { title: "Expectation", desc: "La brecha dolorosa entre la imagen mental y la realidad física.", critique: "Realismo psicodélico.", url: "https://youtu.be/i6Hm8SJF668" },
+                { title: "The Bold Arrow Of Time", desc: "El tiempo como una flecha pesada que avanza sin mirar atrás.", critique: "Anacronismo deliberado.", url: "https://youtu.be/S4pI6v_YQwI" },
+                { title: "Runway, Houses, City, Clouds", desc: "Mirar el mundo desde una perspectiva aérea y distante.", critique: "Viaje astral contemplativo.", url: "https://youtu.be/t_uI-H09_f0" },
+                { title: "I Don't Really Mind", desc: "Al final del día, nada importa tanto como la calma interior.", critique: "Cierre de ciclo.", url: "https://youtu.be/q09R69Yf0Hk" }
             ]
         };
 
@@ -262,33 +279,48 @@
 
             if (currentConfig.bgUrl) {
                 const isV = currentConfig.bgUrl.match(/\.(mp4|webm|ogg)/i) || currentConfig.bgUrl.includes('pixabay.com/videos');
-                if (isV) { videoE.src = currentConfig.bgUrl; videoE.style.opacity = "1"; bgL.style.opacity = "0.2"; }
-                else { imageE.src = currentConfig.bgUrl; imageE.style.opacity = "1"; bgL.style.opacity = "0.2"; }
+                if (isV) { 
+                    videoE.src = currentConfig.bgUrl; 
+                    videoE.oncanplay = () => { videoE.style.opacity = "1"; bgL.style.opacity = "0.3"; };
+                    videoE.onerror = () => { imageE.style.opacity = "0.5"; bgL.style.opacity = "1"; };
+                } else { 
+                    imageE.src = currentConfig.bgUrl; 
+                    imageE.onload = () => { imageE.style.opacity = "1"; bgL.style.opacity = "0.3"; };
+                }
             } else {
                 bgL.style.background = `radial-gradient(circle at 50% 100%, ${currentConfig.color1} -20%, ${currentConfig.color2} 40%, var(--bg-deep) 90%)`;
             }
         }
 
-        // Auth
+        // Sistema de Autenticación con Reintentos
         const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Auth error, retrying...", err);
+                setTimeout(initAuth, 2000);
             }
         };
-        initAuth();
 
         onAuthStateChanged(auth, u => {
             user = u;
             if (u) {
                 onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'main'), (snap) => {
-                    if (snap.exists()) { currentConfig = { ...currentConfig, ...snap.data() }; applyConfig(); }
-                }, (err) => console.log("Error sync:", err));
+                    if (snap.exists()) { 
+                        currentConfig = { ...currentConfig, ...snap.data() }; 
+                        applyConfig(); 
+                    }
+                }, (err) => console.log("Snap error:", err));
             }
         });
 
-        // UI Logic
+        initAuth();
+
+        // UI Builder
         const grid = document.getElementById('objects-grid');
         Object.keys(OBJECT_MAP).forEach(obj => {
             const btn = document.createElement('button');
@@ -296,7 +328,7 @@
             btn.onclick = () => {
                 if (selected.includes(obj)) { selected = selected.filter(n => n !== obj); btn.classList.remove('selected'); }
                 else if (selected.length < 3) { selected.push(obj); btn.classList.add('selected'); }
-                if (selected.length === 3) setTimeout(() => goTo('voice'), 400);
+                if (selected.length === 3) setTimeout(() => goTo('voice'), 500);
             };
             grid.appendChild(btn);
         });
@@ -306,14 +338,17 @@
             setTimeout(() => {
                 const pool = OBJECT_MAP[selected[0]];
                 let title = pool[Math.floor(Math.random() * pool.length)];
-                if (!TONAL_FAMILIES[innerVoice].includes(title)) title = TONAL_FAMILIES[innerVoice][Math.floor(Math.random() * TONAL_FAMILIES[innerVoice].length)];
+                if (!TONAL_FAMILIES[innerVoice].includes(title)) {
+                    const filteredFamily = TONAL_FAMILIES[innerVoice];
+                    title = filteredFamily[Math.floor(Math.random() * filteredFamily.length)];
+                }
                 const track = currentConfig.songs.find(s => s.title === title) || currentConfig.songs[0];
                 document.getElementById('res-title').innerText = track.title;
                 document.getElementById('res-desc').innerText = track.desc;
                 document.getElementById('res-critique').innerText = track.critique;
                 document.getElementById('res-link').href = track.url;
                 goTo('result');
-            }, 2500);
+            }, 3000);
         };
 
         window.goTo = (id) => {
@@ -321,12 +356,14 @@
             setTimeout(() => {
                 document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
                 const n = document.getElementById(`screen-${id}`);
-                n.style.display = 'flex'; setTimeout(() => n.classList.add('active'), 50);
-            }, 400);
+                n.style.display = 'flex'; 
+                setTimeout(() => n.classList.add('active'), 50);
+            }, 600);
         };
 
         window.openLogin = () => {
-            const u = prompt("User:"); const p = prompt("Pass:");
+            const u = prompt("Usuario:"); 
+            const p = prompt("Contraseña:");
             if (u === 'asaehvi' && p === 'notasdazul') {
                 document.getElementById('admin-panel').classList.add('open');
                 document.getElementById('admin-title').value = currentConfig.title;
@@ -344,10 +381,11 @@
                 currentConfig.songs.forEach((s, i) => {
                     const d = document.createElement('div'); d.className = "song-card";
                     d.innerHTML = `
-                        <p class="text-[9px] font-black text-orange-400 mb-2">TRACK ${i+1}</p>
-                        <input type="text" value="${s.title}" onchange="currentConfig.songs[${i}].title=this.value" class="admin-input">
-                        <input type="text" value="${s.url}" onchange="currentConfig.songs[${i}].url=this.value" class="admin-input" placeholder="YouTube URL">
-                        <textarea onchange="currentConfig.songs[${i}].desc=this.value" class="admin-input h-20">${s.desc}</textarea>
+                        <p class="text-[10px] font-black text-orange-400 mb-3">#${i+1} TRACK CONFIG</p>
+                        <input type="text" value="${s.title}" onchange="currentConfig.songs[${i}].title=this.value" class="admin-input" placeholder="Título">
+                        <input type="text" value="${s.url}" onchange="currentConfig.songs[${i}].url=this.value" class="admin-input" placeholder="URL YouTube">
+                        <textarea onchange="currentConfig.songs[${i}].desc=this.value" class="admin-input h-20" placeholder="Descripción">${s.desc}</textarea>
+                        <input type="text" value="${s.critique}" onchange="currentConfig.songs[${i}].critique=this.value" class="admin-input" placeholder="Crítica">
                     `;
                     list.appendChild(d);
                 });
@@ -357,7 +395,7 @@
         window.closeAdmin = () => document.getElementById('admin-panel').classList.remove('open');
 
         window.updateAndSaveConfig = async () => {
-            if (!user) return alert("Firebase no está listo. Espera un momento.");
+            if (!user) return alert("Firebase no autenticado.");
             const data = {
                 ...currentConfig,
                 title: document.getElementById('admin-title').value,
@@ -373,17 +411,18 @@
             };
             try {
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'main'), data);
-                alert("Guardado!"); closeAdmin();
-            } catch(e) { alert("Error: " + e.message); }
+                alert("Configuración sincronizada con éxito."); 
+                closeAdmin();
+            } catch(e) { alert("Error al guardar: " + e.message); }
         };
 
-        // FX Árboles
+        // Efecto Visual de Fondo
         const tc = document.getElementById('trees-container');
-        for(let i=0; i<8; i++) {
+        for(let i=0; i<10; i++) {
             const t = document.createElement('div'); t.className = 'tree';
-            t.innerHTML = `<svg viewBox="0 0 100 100"><path d="M50 10 L85 85 L15 85 Z" fill="currentColor"/></svg>`;
-            t.style.left = `${Math.random()*100}%`; t.style.top = `${Math.random()*80}%`;
-            t.style.animation = `zoomTree ${20+Math.random()*20}s linear infinite`;
+            t.innerHTML = `<svg viewBox="0 0 100 100"><path d="M50 5 L90 90 L10 90 Z" fill="currentColor"/></svg>`;
+            t.style.left = `${Math.random()*100}%`; t.style.top = `${Math.random()*90}%`;
+            t.style.animation = `zoomTree ${15+Math.random()*25}s linear infinite`;
             tc.appendChild(t);
         }
     </script>
