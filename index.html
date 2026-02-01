@@ -9,7 +9,6 @@
     <style>
         :root {
             --bg-deep: #0d1b1a; 
-            --sky-blue: #2a93b8; 
             --leaf-green: #4b6a4a;
             --autumn-orange: #c87c4a;
             --text-off: #e8e4d9;
@@ -35,6 +34,7 @@
             position: fixed; inset: 0;
             background: radial-gradient(circle at 50% 100%, var(--autumn-orange) -20%, var(--leaf-green) 40%, var(--bg-deep) 90%);
             z-index: -2;
+            transition: background 1s ease;
         }
 
         .tree {
@@ -63,7 +63,7 @@
             padding: 2rem;
             text-align: center;
             opacity: 0;
-            transition: opacity 0.8s ease;
+            transition: opacity 0.5s ease;
         }
 
         .screen.active { display: flex; opacity: 1; }
@@ -110,20 +110,40 @@
             background: var(--text-off);
             color: var(--bg-deep);
         }
+
+        /* ADMIN STYLES */
+        #secret-trigger {
+            position: fixed; top: 0; right: 0; width: 40px; height: 40px;
+            z-index: 100; cursor: pointer; opacity: 0;
+        }
+        #admin-panel {
+            position: fixed; top: 0; right: -400px; width: 350px; height: 100%;
+            background: #111; color: #eee; z-index: 200; transition: 0.4s;
+            padding: 2rem; overflow-y: auto; border-left: 1px solid #333;
+        }
+        #admin-panel.open { right: 0; }
+        .admin-input {
+            background: #222; border: 1px solid #444; color: white;
+            width: 100%; padding: 0.5rem; margin-bottom: 1rem; font-size: 0.8rem;
+        }
+        .admin-label { display: block; font-size: 10px; text-transform: uppercase; margin-bottom: 4px; color: #888; }
     </style>
 </head>
 <body>
 
     <div class="grain"></div>
-    <div class="bg-layer"></div>
+    <div class="bg-layer" id="dynamic-bg"></div>
     <div id="trees-container"></div>
+
+    <!-- Botón secreto en esquina superior derecha -->
+    <div id="secret-trigger" onclick="openLogin()"></div>
 
     <!-- PANTALLA 1: LANDING -->
     <div id="screen-landing" class="screen active">
-        <h1 class="text-6xl sm:text-8xl font-black tracking-tighter mb-4">INNERSPEAKER</h1>
-        <p class="typewriter text-xs opacity-50 mb-12 uppercase tracking-[0.4em]">Subconsciente Digital v2.5</p>
+        <h1 id="editable-title" class="text-6xl sm:text-8xl font-black tracking-tighter mb-2">INNERSPEAKER</h1>
+        <h2 id="editable-subtitle" class="text-xl sm:text-2xl font-light tracking-[0.5em] mb-16 opacity-80">TAME IMPALA</h2>
         <button onclick="goTo('room')" id="btn-start" class="btn-main opacity-40 pointer-events-none">Iniciando...</button>
-        <p id="status-text" class="text-[9px] mt-6 uppercase opacity-40">Estableciendo resonancia con la nube...</p>
+        <p id="status-text" class="text-[9px] mt-6 uppercase opacity-40">Sintonizando frecuencias...</p>
     </div>
 
     <!-- PANTALLA 2: CUARTO -->
@@ -140,7 +160,7 @@
             <button class="object-btn" onclick="toggleObject(this, 'Vinilo')">Vinilo</button>
             <button class="object-btn" onclick="toggleObject(this, 'Planta')">Planta</button>
         </div>
-        <p class="mt-8 text-[10px] opacity-40 uppercase">Selecciona 3 fragmentos de tu realidad</p>
+        <p id="room-instruction" class="mt-8 text-[10px] opacity-40 uppercase">Selecciona 3 fragmentos de tu realidad</p>
     </div>
 
     <!-- PANTALLA 3: VOZ -->
@@ -175,15 +195,50 @@
         </div>
     </div>
 
+    <!-- PANEL DE ADMIN -->
+    <div id="admin-panel">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="font-black text-orange-500">CONTROL MAESTRO</h2>
+            <button onclick="closeAdmin()" class="text-xs opacity-50">CERRAR</button>
+        </div>
+        
+        <label class="admin-label">Título Principal</label>
+        <input type="text" id="admin-main-title" class="admin-input" oninput="syncLiveText('editable-title', this.value)">
+        
+        <label class="admin-label">Subtítulo</label>
+        <input type="text" id="admin-sub-title" class="admin-input" oninput="syncLiveText('editable-subtitle', this.value)">
+
+        <label class="admin-label">Color de Fondo 1 (Naranja)</label>
+        <input type="color" id="admin-color-1" class="admin-input" oninput="updateLiveColors()">
+        
+        <label class="admin-label">Color de Fondo 2 (Verde)</label>
+        <input type="color" id="admin-color-2" class="admin-input" oninput="updateLiveColors()">
+
+        <div class="h-[1px] bg-white/10 my-4"></div>
+        
+        <h3 class="text-[10px] font-black mb-4 uppercase tracking-widest text-orange-300">Gestión de Canciones</h3>
+        
+        <label class="admin-label">Categoría: AMABLE (Kind)</label>
+        <div id="song-manager-kind"></div>
+        
+        <div class="h-[1px] bg-white/5 my-4"></div>
+        
+        <label class="admin-label">Categoría: CRÍTICA (Critical)</label>
+        <div id="song-manager-critical"></div>
+        
+        <button onclick="saveGlobalConfig()" class="w-full bg-orange-600 py-3 mt-4 text-xs font-black uppercase rounded shadow-lg hover:bg-orange-500 transition-colors">Guardar Cambios Nube</button>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { 
             getFirestore, doc, setDoc, onSnapshot, 
             initializeFirestore, persistentLocalCache, persistentMultipleTabManager 
         } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
-        const firebaseConfig = {
+        const fbConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+        const firebaseConfig = fbConfigRaw ? JSON.parse(fbConfigRaw) : {
             apiKey: "AIzaSyCXcM54HHeambvpHkJY1-N1G3Q7UPcPOj8",
             authDomain: "innerspeaker-568f3.firebaseapp.com",
             projectId: "innerspeaker-568f3",
@@ -197,146 +252,192 @@
             localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
         });
         const auth = getAuth(app);
-        const appId = 'innerspeaker-v2-prod';
+
+        // Lógica de corrección de ruta para cumplir con segmentos pares (Regla 1)
+        const rawAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-innerspeaker';
+        // Si rawAppId ya tiene el formato de ruta (contiene slashes), lo usamos como base, sino armamos la ruta estándar.
+        const configDocRef = rawAppId.includes('/') 
+            ? doc(db, rawAppId, 'public', 'data', 'config', 'main') 
+            : doc(db, 'artifacts', rawAppId, 'public', 'data', 'config', 'main');
 
         let user = null;
         let selected = [];
         let innerVoice = null;
-
-        // BASE DE DATOS COMPLETA: 11 CANCIONES
-        const songDatabase = {
-            kind: [
-                { title: "Solitude Is Bliss", tag: "Independencia", desc: "No hay nada malo en estar solo. Tu realidad es un santuario construido por ti.", critique: "Tu mente te susurra que el mundo puede esperar.", url: "https://youtu.be/N7eGu_p2jLk" },
-                { title: "Alter Ego", tag: "Dualidad", desc: "Estás en el borde de algo nuevo. Esa extrañeza es el sonido de tu crecimiento.", critique: "Es momento de dejar que esa otra versión de ti tome el control.", url: "https://youtu.be/VpLXxFhy7s4" },
-                { title: "Lucidity", tag: "Claridad", desc: "A veces el camino más claro es el que más vueltas da.", critique: "Has encontrado el hilo, no lo sueltes ahora.", url: "https://youtu.be/S_3S-idN298" },
-                { title: "Jeremy's Storm", tag: "Pausa Instrumental", desc: "No se necesitan palabras cuando el caos tiene su propio ritmo.", critique: "Estás en el ojo del huracán, disfrutando la calma.", url: "https://youtu.be/p667R9pP5r8" },
-                { title: "The Bold Arrow of Time", tag: "Legado", desc: "El tiempo se mueve hacia adelante, pero tú puedes elegir qué llevar contigo.", critique: "Tu confianza es una flecha que atraviesa la incertidumbre.", url: "https://youtu.be/39O2l0H_7yU" },
-                { title: "Runway, Houses, City, Clouds", tag: "Perspectiva", desc: "Mirar desde arriba hace que todo parezca más simple, más hermoso.", critique: "Estás listo para despegar, deja el peso atrás.", url: "https://youtu.be/fM1mX2o-p-0" }
-            ],
-            critical: [
-                { title: "It Is Not Meant To Be", tag: "Aceptación", desc: "A veces las cosas simplemente no encajan. Y eso está bien.", critique: "Deja de forzar lo que el destino ya soltó.", url: "https://youtu.be/3a7jLiSCtfU" },
-                { title: "Expectation", tag: "Realidad", desc: "La distancia entre lo que quieres y lo que tienes es donde vive tu música.", critique: "Tus expectativas son las paredes de tu propia celda.", url: "https://youtu.be/i6Hm8SXcFi8" },
-                { title: "Why Won't You Make Up Your Mind?", tag: "Indecisión", desc: "La duda no es el final, es el motor que te mantiene buscando.", critique: "Tus preguntas son más honestas que tus respuestas.", url: "https://youtu.be/CwIV58Fk6GQ" },
-                { title: "Desire Be, Desire Go", tag: "Impermanencia", desc: "El deseo llega y se va como una marea. No te aferres a lo que fluye.", critique: "Déjalo ir antes de que se convierta en una carga.", url: "https://youtu.be/fM1mX2o-p-0" },
-                { title: "I Don't Really Mind", tag: "Indiferencia", desc: "Cuando dejas de preocuparte, el universo empieza a conspirar a tu favor.", critique: "Tu libertad nace en el momento en que dejas de buscar aprobación.", url: "https://youtu.be/0HwS8N_m77U" }
-            ]
+        let currentConfig = {
+            title: "INNERSPEAKER",
+            subtitle: "TAME IMPALA",
+            color1: "#c87c4a",
+            color2: "#4b6a4a",
+            songs: {
+                kind: [
+                    { title: "Solitude Is Bliss", tag: "Independencia", desc: "No hay nada malo en estar solo.", critique: "Mente calmada.", url: "https://youtu.be/N7eGu_p2jLk" },
+                    { title: "Alter Ego", tag: "Dualidad", desc: "Estás en el borde de algo nuevo.", critique: "Cambio interno.", url: "https://youtu.be/VpLXxFhy7s4" }
+                ],
+                critical: [
+                    { title: "It Is Not Meant To Be", tag: "Aceptación", desc: "A veces las cosas no encajan.", critique: "Realidad pura.", url: "https://youtu.be/3a7jLiSCtfU" }
+                ]
+            }
         };
 
-        window.goTo = (id) => {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            setTimeout(() => {
-                document.getElementById(`screen-${id}`).classList.add('active');
-            }, 50);
-        };
+        // Escucha cambios en tiempo real desde Firestore
+        onSnapshot(configDocRef, (snap) => {
+            if (snap.exists()) {
+                currentConfig = snap.data();
+                applyConfig();
+            } else {
+                saveGlobalConfig(true); 
+            }
+        }, (error) => {
+            console.error("Error en Firestore:", error);
+        });
 
-        function createTree() {
-            const container = document.getElementById('trees-container');
-            const tree = document.createElement('div');
-            tree.className = 'tree';
-            tree.innerHTML = `
-                <svg viewBox="0 0 100 100">
-                    <path d="M50 10 L85 85 L15 85 Z" fill="currentColor" />
-                    <rect x="45" y="85" width="10" height="15" fill="currentColor" />
-                </svg>
-            `;
-            const x = 10 + Math.random() * 80;
-            const y = 10 + Math.random() * 60;
-            const duration = 15 + Math.random() * 10;
-            const delay = Math.random() * 5;
-            tree.style.left = `${x}%`;
-            tree.style.top = `${y}%`;
-            tree.style.animation = `zoomTree ${duration}s linear ${delay}s infinite`;
-            container.appendChild(tree);
+        function applyConfig() {
+            document.getElementById('editable-title').innerText = currentConfig.title;
+            document.getElementById('editable-subtitle').innerText = currentConfig.subtitle;
+            document.getElementById('dynamic-bg').style.background = `radial-gradient(circle at 50% 100%, ${currentConfig.color1} -20%, ${currentConfig.color2} 40%, var(--bg-deep) 90%)`;
+            
+            const titleInput = document.getElementById('admin-main-title');
+            const subInput = document.getElementById('admin-sub-title');
+            const c1Input = document.getElementById('admin-color-1');
+            const c2Input = document.getElementById('admin-color-2');
+
+            if(titleInput) titleInput.value = currentConfig.title;
+            if(subInput) subInput.value = currentConfig.subtitle;
+            if(c1Input) c1Input.value = currentConfig.color1;
+            if(c2Input) c2Input.value = currentConfig.color2;
+            
+            renderSongLists();
         }
 
-        for(let i=0; i<12; i++) createTree();
+        window.syncLiveText = (id, val) => { 
+            document.getElementById(id).innerText = val; 
+            if (id === 'editable-title') currentConfig.title = val;
+            if (id === 'editable-subtitle') currentConfig.subtitle = val;
+        };
+
+        window.updateLiveColors = () => {
+            const c1 = document.getElementById('admin-color-1').value;
+            const c2 = document.getElementById('admin-color-2').value;
+            document.getElementById('dynamic-bg').style.background = `radial-gradient(circle at 50% 100%, ${c1} -20%, ${c2} 40%, var(--bg-deep) 90%)`;
+            currentConfig.color1 = c1; 
+            currentConfig.color2 = c2;
+        };
+
+        window.saveGlobalConfig = async (silent = false) => {
+            if (!user) return;
+            try {
+                await setDoc(configDocRef, currentConfig);
+                if (!silent) alert("Configuración guardada.");
+            } catch (e) {
+                console.error("Error al guardar:", e);
+            }
+        };
+
+        function renderSongLists() {
+            const renderCategory = (cat, containerId) => {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                container.innerHTML = '';
+                currentConfig.songs[cat].forEach((song, idx) => {
+                    const div = document.createElement('div');
+                    div.className = "mb-6 p-3 bg-white/5 rounded border border-white/10";
+                    div.innerHTML = `
+                        <label class="text-[8px] opacity-50 uppercase mb-1 block">Título</label>
+                        <input class="admin-input mb-1" value="${song.title}" oninput="currentConfig.songs.${cat}[${idx}].title = this.value">
+                        <label class="text-[8px] opacity-50 uppercase mb-1 block">YouTube URL</label>
+                        <input class="admin-input mb-1" placeholder="URL YouTube" value="${song.url}" oninput="currentConfig.songs.${cat}[${idx}].url = this.value">
+                        <label class="text-[8px] opacity-50 uppercase mb-1 block">Descripción</label>
+                        <textarea class="admin-input mb-1 h-12" oninput="currentConfig.songs.${cat}[${idx}].desc = this.value">${song.desc}</textarea>
+                    `;
+                    container.appendChild(div);
+                });
+            };
+            renderCategory('kind', 'song-manager-kind');
+            renderCategory('critical', 'song-manager-critical');
+        }
+
+        window.openLogin = () => {
+            const u = prompt("Usuario:");
+            const p = prompt("Contraseña:");
+            if(u === 'asaehvi' && p === 'notasdazul') {
+                document.getElementById('admin-panel').classList.add('open');
+            } else {
+                alert("Acceso denegado.");
+            }
+        };
+
+        window.closeAdmin = () => document.getElementById('admin-panel').classList.remove('open');
+
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        };
 
         onAuthStateChanged(auth, (u) => {
+            user = u;
             if (u) {
-                user = u;
-                document.getElementById('status-text').innerText = "Conexión estable.";
+                document.getElementById('status-text').innerText = "Conexión establecida.";
                 const btn = document.getElementById('btn-start');
                 btn.innerText = "ENTRAR";
                 btn.classList.remove('opacity-40', 'pointer-events-none');
-                loadUserData();
             }
         });
 
-        signInAnonymously(auth).catch(() => {
-            document.getElementById('status-text').innerText = "Modo offline.";
-            document.getElementById('btn-start').classList.remove('opacity-40', 'pointer-events-none');
-        });
+        initAuth();
 
-        function loadUserData() {
-            if (!user) return;
-            const userDoc = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'state');
-            onSnapshot(userDoc, (snap) => {
-                if (snap.exists()) {
-                    const data = snap.data();
-                    selected = data.selected || [];
-                    innerVoice = data.innerVoice || null;
-                    syncUI();
-                }
-            });
-        }
+        window.goTo = (id) => {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const target = document.getElementById(`screen-${id}`);
+            if (target) target.classList.add('active');
+        };
 
-        async function saveState() {
-            if (!user) return;
-            const userDoc = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'state');
-            await setDoc(userDoc, { selected, innerVoice, lastUpdate: Date.now() });
-        }
-
-        window.toggleObject = async (btn, name) => {
+        window.toggleObject = (btn, name) => {
             if (selected.includes(name)) {
                 selected = selected.filter(n => n !== name);
+                btn.classList.remove('selected');
             } else if (selected.length < 3) {
                 selected.push(name);
+                btn.classList.add('selected');
             }
-            syncUI();
-            await saveState();
-            if (selected.length === 3) {
-                setTimeout(() => goTo('voice'), 800);
-            }
+            document.getElementById('room-instruction').innerText = `Seleccionados: ${selected.length} / 3`;
+            if (selected.length === 3) { setTimeout(() => goTo('voice'), 400); }
         };
 
-        window.setVoice = async (v) => {
+        window.setVoice = (v) => {
             innerVoice = v;
-            await saveState();
             goTo('loading');
-            
-            const msgs = ["Sintonizando...", "Alineando ecos...", "Procesando subconsciente..."];
-            let i = 0;
-            const interval = setInterval(() => {
-                document.getElementById('loading-msg').innerText = msgs[i++ % msgs.length];
-            }, 700);
-
-            setTimeout(() => {
-                clearInterval(interval);
-                showResult();
-            }, 2500);
+            setTimeout(() => showResult(), 1200); 
         };
-
-        function syncUI() {
-            document.querySelectorAll('.object-btn').forEach(btn => {
-                btn.classList.toggle('selected', selected.includes(btn.innerText));
-            });
-        }
 
         function showResult() {
-            const pool = songDatabase[innerVoice] || songDatabase.kind;
-            // Cálculo basado en la longitud combinada de los objetos seleccionados para variar el resultado
-            const weight = selected.reduce((acc, name) => acc + name.length, 0);
-            const index = weight % pool.length;
-            const result = pool[index];
+            const pool = currentConfig.songs[innerVoice] || currentConfig.songs.kind;
+            const weight = selected.reduce((acc, s) => acc + s.length, 0);
+            const result = pool[weight % pool.length];
 
             document.getElementById('res-title').innerText = result.title;
-            document.getElementById('res-tag').innerText = result.tag;
+            document.getElementById('res-tag').innerText = result.tag || (innerVoice === 'kind' ? 'LUZ' : 'SOMBRA');
             document.getElementById('res-desc').innerText = result.desc;
-            document.getElementById('res-critique').innerText = result.critique;
+            document.getElementById('res-critique').innerText = result.critique || "";
             document.getElementById('res-link').href = result.url;
             
             goTo('result');
         }
+
+        function createTree() {
+            const container = document.getElementById('trees-container');
+            if(!container) return;
+            const tree = document.createElement('div');
+            tree.className = 'tree';
+            tree.innerHTML = `<svg viewBox="0 0 100 100"><path d="M50 10 L85 85 L15 85 Z" fill="currentColor"/><rect x="45" y="85" width="10" height="15" fill="currentColor"/></svg>`;
+            tree.style.left = `${5 + Math.random() * 90}%`;
+            tree.style.top = `${5 + Math.random() * 70}%`;
+            tree.style.animation = `zoomTree ${12 + Math.random() * 10}s linear ${Math.random() * 5}s infinite`;
+            container.appendChild(tree);
+        }
+        for(let i=0; i<15; i++) createTree();
     </script>
 </body>
 </html>
