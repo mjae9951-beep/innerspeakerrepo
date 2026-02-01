@@ -2,115 +2,185 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Innerspeaker - Experience</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Permanent+Marker&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Permanent+Marker&family=Inter:wght@200;300;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --paper: #e2ddd1;
-            --ink: #2a2a2a;
+            --bg-deep: #0d1b1a; 
+            --sky-blue: #2a93b8; 
+            --leaf-green: #4b6a4a;
+            --autumn-orange: #c87c4a;
+            --text-off: #e8e4d9;
         }
 
         body, html {
             margin: 0; padding: 0;
             width: 100%; height: 100%;
-            background-color: #1a1815;
-            color: var(--ink);
-            font-family: 'Special Elite', serif;
+            background-color: var(--bg-deep);
+            color: var(--text-off);
+            font-family: 'Inter', sans-serif;
             overflow: hidden;
+            touch-action: manipulation;
         }
 
-        /* Textura de escaneo y ruido */
-        .scanner-texture {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
-            background-size: 100% 3px, 2px 100%;
-            pointer-events: none; z-index: 100; opacity: 0.5;
+        .grain {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://grainy-gradients.vercel.app/noise.svg');
+            opacity: 0.15; pointer-events: none; z-index: 50;
         }
 
-        .paper-sheet {
-            background-color: var(--paper);
-            background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png');
-            box-shadow: 20px 20px 60px rgba(0,0,0,0.7);
-            padding: 40px;
-            position: relative;
-            max-width: 600px;
-            width: 90%;
-            min-height: 550px;
-            display: flex;
+        .bg-layer {
+            position: fixed; inset: 0;
+            background: radial-gradient(circle at 50% 100%, var(--autumn-orange) -20%, var(--leaf-green) 40%, var(--bg-deep) 90%);
+            z-index: -2;
+        }
+
+        .tree {
+            position: absolute;
+            width: 150px; height: 150px;
+            color: rgba(20, 40, 30, 0.6);
+            transform-origin: center;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes zoomTree {
+            0% { transform: scale(0.1) rotate(0deg); opacity: 0; }
+            15% { opacity: 0.8; }
+            85% { opacity: 0.8; }
+            100% { transform: scale(4) rotate(15deg); opacity: 0; }
+        }
+
+        .screen {
+            display: none;
+            position: absolute;
+            inset: 0;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.8s ease;
         }
 
-        /* Borde roto psicodélico */
-        .torn-edge {
-            clip-path: polygon(1% 2%, 4% 0%, 9% 3%, 14% 1%, 19% 4%, 24% 1%, 31% 3%, 36% 0%, 41% 2%, 46% 1%, 51% 4%, 56% 1%, 62% 3%, 68% 1%, 74% 4%, 79% 1%, 84% 3%, 89% 1%, 94% 4%, 98% 1%, 100% 2%, 99% 98%, 94% 100%, 89% 97%, 84% 99%, 79% 96%, 74% 98%, 68% 95%, 62% 98%, 56% 96%, 51% 99%, 46% 96%, 41% 98%, 36% 96%, 31% 99%, 24% 97%, 19% 99%, 14% 96%, 9% 98%, 4% 96%, 0% 99%, 1% 97%);
-        }
-
-        .screen { display: none; opacity: 0; transition: opacity 0.5s ease; width: 100%; height: 100%; }
         .screen.active { display: flex; opacity: 1; }
 
-        .object-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%;
+        .object-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            transition: all 0.3s;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
         }
 
-        .object-item {
-            cursor: pointer; transition: all 0.3s; filter: grayscale(0.5);
-            border: 2px solid transparent;
+        .object-btn.selected {
+            background: var(--autumn-orange);
+            color: white;
+            border-color: var(--autumn-orange);
+            transform: scale(0.95);
         }
-        .object-item:hover { filter: grayscale(0); transform: translateY(-5px); }
-        .object-item img { width: 100%; aspect-ratio: 1/1; object-fit: cover; box-shadow: 5px 5px 15px rgba(0,0,0,0.2); }
-        .object-item.selected { filter: grayscale(0) sepia(0.4); border-color: var(--ink); transform: scale(0.95); }
 
-        .btn-handwritten { font-family: 'Permanent Marker', cursive; }
-        
-        #status-bar { font-size: 10px; color: #777; margin-top: 15px; }
+        .voice-btn {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 2.5rem;
+            transition: color 0.3s;
+        }
+
+        .voice-btn:hover { color: var(--autumn-orange); }
+
+        .typewriter { font-family: 'Special Elite', serif; }
+
+        .btn-main {
+            border: 1px solid var(--text-off);
+            padding: 0.75rem 2.5rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 0.2em;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+
+        .btn-main:hover {
+            background: var(--text-off);
+            color: var(--bg-deep);
+        }
     </style>
 </head>
-<body class="flex items-center justify-center p-6">
+<body>
 
-    <div class="scanner-texture"></div>
+    <div class="grain"></div>
+    <div class="bg-layer"></div>
+    <div id="trees-container"></div>
 
-    <div class="paper-sheet torn-edge" id="main-container">
-        <!-- Pantalla 1: Inicio -->
-        <div id="screen-landing" class="screen active flex-col items-center justify-center text-center">
-            <div class="mb-6 rotate-[-3deg] border-[12px] border-white shadow-2xl w-48 h-48 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1523730205978-59fd1b2965e3?auto=format&fit=crop&q=80&w=400" class="w-full h-full object-cover">
-            </div>
-            <h1 class="text-4xl font-black tracking-tighter uppercase mb-2">INNERSPEAKER</h1>
-            <p class="text-[10px] opacity-50 tracking-[0.3em] mb-10">PROYECTO PSICODÉLICO CLOUD</p>
-            <button onclick="goTo('room')" id="btn-start" class="btn-handwritten text-2xl border-b-2 border-black opacity-50 pointer-events-none">CARGANDO...</button>
-            <p id="status-bar">Conectando con Firestore...</p>
+    <!-- PANTALLA 1: LANDING -->
+    <div id="screen-landing" class="screen active">
+        <h1 class="text-6xl sm:text-8xl font-black tracking-tighter mb-4">INNERSPEAKER</h1>
+        <p class="typewriter text-xs opacity-50 mb-12 uppercase tracking-[0.4em]">Subconsciente Digital v2.5</p>
+        <button onclick="goTo('room')" id="btn-start" class="btn-main opacity-40 pointer-events-none">Iniciando...</button>
+        <p id="status-text" class="text-[9px] mt-6 uppercase opacity-40">Estableciendo resonancia con la nube...</p>
+    </div>
+
+    <!-- PANTALLA 2: CUARTO -->
+    <div id="screen-room" class="screen">
+        <h2 class="text-[10px] font-black uppercase tracking-[0.3em] mb-8 opacity-40">Paso 01 / Percepción del entorno</h2>
+        <div class="grid grid-cols-3 gap-3 w-full max-w-sm">
+            <button class="object-btn" onclick="toggleObject(this, 'Espejo')">Espejo</button>
+            <button class="object-btn" onclick="toggleObject(this, 'Ventana')">Ventana</button>
+            <button class="object-btn" onclick="toggleObject(this, 'Libreta')">Libreta</button>
+            <button class="object-btn" onclick="toggleObject(this, 'Silla')">Silla</button>
+            <button class="object-btn" onclick="toggleObject(this, 'Reloj')">Reloj</button>
+            <button class="object-btn" onclick="toggleObject(this, 'Lámpara')">Lámpara</button>
+            <button class="object-btn" onclick="toggleObject(this, 'Cámara')">Cámara</button>
+            <button class="object-btn" onclick="toggleObject(this, 'Vinilo')">Vinilo</button>
+            <button class="object-btn" onclick="toggleObject(this, 'Planta')">Planta</button>
         </div>
+        <p class="mt-8 text-[10px] opacity-40 uppercase">Selecciona 3 fragmentos de tu realidad</p>
+    </div>
 
-        <!-- Pantalla 2: Selección -->
-        <div id="screen-room" class="screen flex-col items-center w-full">
-            <h2 class="text-[10px] mb-8 uppercase font-bold tracking-widest text-zinc-500">Elige 3 fragmentos de tu entorno</h2>
-            <div class="object-grid" id="grid"></div>
-            <div id="counter" class="mt-8 text-xs font-bold uppercase border-t border-black/10 pt-4 w-full text-center">Seleccionados: 0/3</div>
+    <!-- PANTALLA 3: VOZ -->
+    <div id="screen-voice" class="screen">
+        <h2 class="text-[10px] font-black uppercase tracking-[0.3em] mb-12 opacity-40">Paso 02 / La Voz Interior</h2>
+        <div class="flex flex-col gap-8">
+            <button onclick="setVoice('kind')" class="voice-btn">Amable</button>
+            <div class="h-[1px] bg-white/10 w-32 mx-auto"></div>
+            <button onclick="setVoice('critical')" class="voice-btn">Crítica</button>
         </div>
+    </div>
 
-        <!-- Pantalla 3: Resultado -->
-        <div id="screen-result" class="screen flex-col items-center justify-center text-center">
-            <div class="border-l-4 border-black pl-4 text-left mb-8">
-                <h3 id="res-title" class="text-3xl font-black uppercase italic"></h3>
-                <p id="res-tagline" class="text-[9px] uppercase tracking-widest opacity-60"></p>
-            </div>
-            <p id="res-desc" class="text-xs leading-relaxed mb-10 italic"></p>
-            <div class="flex justify-between w-full items-end">
-                <a id="res-link" href="#" target="_blank" class="btn-handwritten text-2xl text-red-800 underline decoration-red-800/30">ESCUCHAR</a>
-                <button onclick="location.reload()" class="text-[10px] uppercase font-bold border border-black px-3 py-1 hover:bg-black hover:text-white transition-all">Reiniciar</button>
+    <!-- PANTALLA 4: CARGA -->
+    <div id="screen-loading" class="screen">
+        <div class="w-16 h-16 border-2 border-white/20 border-t-white rounded-full animate-spin mb-6"></div>
+        <p id="loading-msg" class="typewriter text-xs uppercase tracking-widest animate-pulse">Analizando...</p>
+    </div>
+
+    <!-- PANTALLA 5: RESULTADO -->
+    <div id="screen-result" class="screen">
+        <div class="max-w-md">
+            <h3 id="res-title" class="text-4xl sm:text-5xl font-black uppercase tracking-tighter mb-4"></h3>
+            <p id="res-tag" class="text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-6"></p>
+            <div class="h-[1px] bg-white/20 w-full mb-6"></div>
+            <p id="res-desc" class="typewriter text-sm leading-relaxed mb-6"></p>
+            <p id="res-critique" class="typewriter text-xs italic opacity-40 mb-12"></p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 items-center justify-center">
+                <a id="res-link" href="#" target="_blank" class="btn-main">Escuchar</a>
+                <button onclick="location.reload()" class="text-[9px] uppercase font-black opacity-30 hover:opacity-100 transition-opacity">Reiniciar Experiencia</button>
             </div>
         </div>
     </div>
 
-    <!-- Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { 
+            getFirestore, doc, setDoc, onSnapshot, 
+            initializeFirestore, persistentLocalCache, persistentMultipleTabManager 
+        } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -123,104 +193,150 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db = initializeFirestore(app, {
+            localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+        });
         const auth = getAuth(app);
-        const appId = 'innerspeaker-stackblitz-v1';
+        const appId = 'innerspeaker-v2-prod';
 
         let user = null;
         let selected = [];
+        let innerVoice = null;
 
-        const objects = [
-            { id: '1', name: "Espejo", url: "https://images.unsplash.com/photo-1595071534000-d8f95c057636?q=60&w=300" },
-            { id: '2', name: "Ventana", url: "https://images.unsplash.com/photo-1508333706533-1ab43ecb1606?q=60&w=300" },
-            { id: '3', name: "Libreta", url: "https://images.unsplash.com/photo-1517842645767-c639042777db?q=60&w=300" },
-            { id: '4', name: "Cama", url: "https://images.unsplash.com/photo-1505691938895-1758d7eaa511?q=60&w=300" },
-            { id: '5', name: "Reloj", url: "https://images.unsplash.com/photo-1509048191080-d2984bad6ad5?q=60&w=300" },
-            { id: '6', name: "Lámpara", url: "https://images.unsplash.com/photo-1534073828943-f801091bb18c?q=60&w=300" }
-        ];
+        // BASE DE DATOS COMPLETA: 11 CANCIONES
+        const songDatabase = {
+            kind: [
+                { title: "Solitude Is Bliss", tag: "Independencia", desc: "No hay nada malo en estar solo. Tu realidad es un santuario construido por ti.", critique: "Tu mente te susurra que el mundo puede esperar.", url: "https://youtu.be/N7eGu_p2jLk" },
+                { title: "Alter Ego", tag: "Dualidad", desc: "Estás en el borde de algo nuevo. Esa extrañeza es el sonido de tu crecimiento.", critique: "Es momento de dejar que esa otra versión de ti tome el control.", url: "https://youtu.be/VpLXxFhy7s4" },
+                { title: "Lucidity", tag: "Claridad", desc: "A veces el camino más claro es el que más vueltas da.", critique: "Has encontrado el hilo, no lo sueltes ahora.", url: "https://youtu.be/S_3S-idN298" },
+                { title: "Jeremy's Storm", tag: "Pausa Instrumental", desc: "No se necesitan palabras cuando el caos tiene su propio ritmo.", critique: "Estás en el ojo del huracán, disfrutando la calma.", url: "https://youtu.be/p667R9pP5r8" },
+                { title: "The Bold Arrow of Time", tag: "Legado", desc: "El tiempo se mueve hacia adelante, pero tú puedes elegir qué llevar contigo.", critique: "Tu confianza es una flecha que atraviesa la incertidumbre.", url: "https://youtu.be/39O2l0H_7yU" },
+                { title: "Runway, Houses, City, Clouds", tag: "Perspectiva", desc: "Mirar desde arriba hace que todo parezca más simple, más hermoso.", critique: "Estás listo para despegar, deja el peso atrás.", url: "https://youtu.be/fM1mX2o-p-0" }
+            ],
+            critical: [
+                { title: "It Is Not Meant To Be", tag: "Aceptación", desc: "A veces las cosas simplemente no encajan. Y eso está bien.", critique: "Deja de forzar lo que el destino ya soltó.", url: "https://youtu.be/3a7jLiSCtfU" },
+                { title: "Expectation", tag: "Realidad", desc: "La distancia entre lo que quieres y lo que tienes es donde vive tu música.", critique: "Tus expectativas son las paredes de tu propia celda.", url: "https://youtu.be/i6Hm8SXcFi8" },
+                { title: "Why Won't You Make Up Your Mind?", tag: "Indecisión", desc: "La duda no es el final, es el motor que te mantiene buscando.", critique: "Tus preguntas son más honestas que tus respuestas.", url: "https://youtu.be/CwIV58Fk6GQ" },
+                { title: "Desire Be, Desire Go", tag: "Impermanencia", desc: "El deseo llega y se va como una marea. No te aferres a lo que fluye.", critique: "Déjalo ir antes de que se convierta en una carga.", url: "https://youtu.be/fM1mX2o-p-0" },
+                { title: "I Don't Really Mind", tag: "Indiferencia", desc: "Cuando dejas de preocuparte, el universo empieza a conspirar a tu favor.", critique: "Tu libertad nace en el momento en que dejas de buscar aprobación.", url: "https://youtu.be/0HwS8N_m77U" }
+            ]
+        };
 
-        // 1. Iniciar Sesión (Anónima)
-        signInAnonymously(auth).catch(e => {
-            document.getElementById('status-bar').innerText = "Error: Activa 'Anónimo' en Firebase Console.";
-            console.error(e);
-        });
+        window.goTo = (id) => {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            setTimeout(() => {
+                document.getElementById(`screen-${id}`).classList.add('active');
+            }, 50);
+        };
+
+        function createTree() {
+            const container = document.getElementById('trees-container');
+            const tree = document.createElement('div');
+            tree.className = 'tree';
+            tree.innerHTML = `
+                <svg viewBox="0 0 100 100">
+                    <path d="M50 10 L85 85 L15 85 Z" fill="currentColor" />
+                    <rect x="45" y="85" width="10" height="15" fill="currentColor" />
+                </svg>
+            `;
+            const x = 10 + Math.random() * 80;
+            const y = 10 + Math.random() * 60;
+            const duration = 15 + Math.random() * 10;
+            const delay = Math.random() * 5;
+            tree.style.left = `${x}%`;
+            tree.style.top = `${y}%`;
+            tree.style.animation = `zoomTree ${duration}s linear ${delay}s infinite`;
+            container.appendChild(tree);
+        }
+
+        for(let i=0; i<12; i++) createTree();
 
         onAuthStateChanged(auth, (u) => {
             if (u) {
                 user = u;
-                document.getElementById('status-bar').innerText = "Sincronizado con la nube.";
+                document.getElementById('status-text').innerText = "Conexión estable.";
                 const btn = document.getElementById('btn-start');
                 btn.innerText = "ENTRAR";
-                btn.classList.remove('opacity-50', 'pointer-events-none');
-                loadProgress();
+                btn.classList.remove('opacity-40', 'pointer-events-none');
+                loadUserData();
             }
         });
 
-        // 2. Cargar datos de Firestore
-        function loadProgress() {
+        signInAnonymously(auth).catch(() => {
+            document.getElementById('status-text').innerText = "Modo offline.";
+            document.getElementById('btn-start').classList.remove('opacity-40', 'pointer-events-none');
+        });
+
+        function loadUserData() {
             if (!user) return;
-            const userDoc = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'progress');
+            const userDoc = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'state');
             onSnapshot(userDoc, (snap) => {
                 if (snap.exists()) {
-                    selected = snap.data().selected || [];
-                    updateUI();
-                    if (selected.length === 3) {
-                        setTimeout(() => showResult(), 600);
-                    }
+                    const data = snap.data();
+                    selected = data.selected || [];
+                    innerVoice = data.innerVoice || null;
+                    syncUI();
                 }
             });
         }
 
-        // 3. Guardar datos en Firestore
-        async function toggleObject(name) {
+        async function saveState() {
+            if (!user) return;
+            const userDoc = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'state');
+            await setDoc(userDoc, { selected, innerVoice, lastUpdate: Date.now() });
+        }
+
+        window.toggleObject = async (btn, name) => {
             if (selected.includes(name)) {
                 selected = selected.filter(n => n !== name);
             } else if (selected.length < 3) {
                 selected.push(name);
             }
-            
-            const userDoc = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'progress');
-            await setDoc(userDoc, { selected, timestamp: Date.now() });
-        }
+            syncUI();
+            await saveState();
+            if (selected.length === 3) {
+                setTimeout(() => goTo('voice'), 800);
+            }
+        };
 
-        function updateUI() {
-            document.querySelectorAll('.object-item').forEach(el => {
-                const name = el.getAttribute('data-name');
-                el.classList.toggle('selected', selected.includes(name));
+        window.setVoice = async (v) => {
+            innerVoice = v;
+            await saveState();
+            goTo('loading');
+            
+            const msgs = ["Sintonizando...", "Alineando ecos...", "Procesando subconsciente..."];
+            let i = 0;
+            const interval = setInterval(() => {
+                document.getElementById('loading-msg').innerText = msgs[i++ % msgs.length];
+            }, 700);
+
+            setTimeout(() => {
+                clearInterval(interval);
+                showResult();
+            }, 2500);
+        };
+
+        function syncUI() {
+            document.querySelectorAll('.object-btn').forEach(btn => {
+                btn.classList.toggle('selected', selected.includes(btn.innerText));
             });
-            document.getElementById('counter').innerText = `Seleccionados: ${selected.length}/3`;
         }
 
         function showResult() {
-            const library = [
-                { title: "Solitude Is Bliss", tag: "Independencia pura", desc: "Has elegido los objetos que definen un espacio propio. Te sientes cómodo en el silencio de tu mente.", url: "https://youtu.be/N7eGu_p2jLk" },
-                { title: "Alter Ego", tag: "Dualidad consciente", desc: "Tus elecciones muestran un equilibrio entre el adentro y el afuera. Estás listo para transformarte.", url: "https://youtu.be/VpLXxFhy7s4" },
-                { title: "Expectation", tag: "Búsqueda infinita", desc: "Los fragmentos de tu realidad indican que estás esperando algo grande. La respuesta está en el camino.", url: "https://youtu.be/i6Hm8SXcFi8" }
-            ];
+            const pool = songDatabase[innerVoice] || songDatabase.kind;
+            // Cálculo basado en la longitud combinada de los objetos seleccionados para variar el resultado
+            const weight = selected.reduce((acc, name) => acc + name.length, 0);
+            const index = weight % pool.length;
+            const result = pool[index];
+
+            document.getElementById('res-title').innerText = result.title;
+            document.getElementById('res-tag').innerText = result.tag;
+            document.getElementById('res-desc').innerText = result.desc;
+            document.getElementById('res-critique').innerText = result.critique;
+            document.getElementById('res-link').href = result.url;
             
-            const res = library[selected.length % library.length];
-            document.getElementById('res-title').innerText = res.title;
-            document.getElementById('res-tagline').innerText = res.tag;
-            document.getElementById('res-desc').innerText = res.desc;
-            document.getElementById('res-link').href = res.url;
             goTo('result');
         }
-
-        window.goTo = (id) => {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(`screen-${id}`).classList.add('active');
-        };
-
-        // Generar Grilla
-        const grid = document.getElementById('grid');
-        objects.forEach(obj => {
-            const div = document.createElement('div');
-            div.className = 'object-item';
-            div.setAttribute('data-name', obj.name);
-            div.innerHTML = `<img src="${obj.url}" alt="${obj.name}"><p class="text-[8px] mt-1 uppercase text-center font-bold">${obj.name}</p>`;
-            div.onclick = () => toggleObject(obj.name);
-            grid.appendChild(div);
-        });
     </script>
 </body>
 </html>
