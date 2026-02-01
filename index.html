@@ -128,7 +128,6 @@
         
         label { font-size: 0.65rem; text-transform: uppercase; opacity: 0.5; font-weight: 900; letter-spacing: 0.15em; margin-bottom: 0.5rem; display: block; color: var(--autumn-orange); }
 
-        /* Scrollbar */
         #admin-panel::-webkit-scrollbar { width: 5px; }
         #admin-panel::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
     </style>
@@ -147,7 +146,7 @@
         <h1 id="editable-title" class="text-6xl sm:text-8xl font-black tracking-tighter mb-2">INNERSPEAKER</h1>
         <h2 id="editable-subtitle" class="text-lg sm:text-2xl font-light tracking-[0.4em] mb-12 sm:mb-20 opacity-80 uppercase">TAME IMPALA</h2>
         <button onclick="goTo('room')" id="btn-start" class="btn-main">ACCEDER</button>
-        <p id="status-text" class="text-[9px] sm:text-[10px] mt-8 uppercase opacity-60 tracking-widest px-4 max-w-xs leading-relaxed">Cargando sistema...</p>
+        <p id="status-text" class="text-[9px] sm:text-[10px] mt-8 uppercase opacity-60 tracking-widest px-4 max-w-xs leading-relaxed">Producido por André d'Lynae</p>
     </div>
 
     <!-- PANTALLA 2: ROOM -->
@@ -211,21 +210,6 @@
         </div>
 
         <div class="mb-12">
-            <h3 class="text-[11px] font-black mb-6 uppercase text-orange-300 border-b border-orange-300/20 pb-2">Contenido de Pantallas</h3>
-            <label>Pantalla 1: Crédito de Autoría</label>
-            <textarea id="admin-txt-author" class="admin-input h-20"></textarea>
-            
-            <label>Pantalla 2: Instrucción Selección</label>
-            <input type="text" id="admin-txt-room" class="admin-input">
-            
-            <label>Pantalla 5: Etiqueta Resultado</label>
-            <input type="text" id="admin-txt-restag" class="admin-input">
-            
-            <label>Pantalla 5: Botón Reinicio</label>
-            <input type="text" id="admin-txt-reset" class="admin-input">
-        </div>
-
-        <div class="mb-12">
             <h3 class="text-[11px] font-black mb-6 uppercase text-orange-300 border-b border-orange-300/20 pb-2">Base de Canciones</h3>
             <div id="songs-editor-container"></div>
         </div>
@@ -240,6 +224,7 @@
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
+        // CONFIGURACIÓN
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -269,6 +254,7 @@
         let innerVoice = null;
         let unsubscribeSnapshot = null;
 
+        // VALORES POR DEFECTO (Cargan instantáneamente)
         let currentConfig = {
             title: "INNERSPEAKER",
             subtitle: "TAME IMPALA",
@@ -276,7 +262,7 @@
             color2: "#4b6a4a",
             bgVideo: "",
             bgImage: "",
-            textAuthor: "Escrito, compuesto y producido en su totalidad por André d'Lynae",
+            textAuthor: "Producido por André d'Lynae",
             textRoomInstr: "Selecciona 3 fragmentos de tu realidad",
             textResTag: "Vibración Resonante",
             textResetBtn: "Reiniciar Conciencia",
@@ -295,7 +281,7 @@
             ]
         };
 
-        // Render grid
+        // Renderizado inicial de la cuadrícula
         const grid = document.getElementById('objects-grid');
         Object.keys(OBJECT_MAP).forEach(obj => {
             const btn = document.createElement('button');
@@ -305,10 +291,14 @@
             grid.appendChild(btn);
         });
 
-        // REGLA 3: Solo escuchar Firestore tras autenticación
+        // Aplicar valores iniciales de inmediato
+        applyConfig();
+
+        // FLUJO DE FIREBASE
         onAuthStateChanged(auth, (u) => {
             user = u;
             if (u) {
+                // Solo activamos la escucha una vez autenticados
                 if (unsubscribeSnapshot) unsubscribeSnapshot();
                 unsubscribeSnapshot = onSnapshot(configDocRef, (snap) => {
                     if (snap.exists()) {
@@ -317,32 +307,28 @@
                         updateAdminForm();
                     }
                 }, (error) => {
-                    console.error("Firestore Listener Error:", error);
+                    console.warn("Firestore en espera...");
                 });
             }
         });
 
-        const initAuth = async () => {
+        // Autenticación silenciosa en segundo plano
+        const silentAuth = async () => {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else { 
                     await signInAnonymously(auth); 
                 }
-            } catch (e) {
-                console.error("Auth Error:", e);
-            }
+            } catch (e) { console.error("Silenced auth error", e); }
         };
-        initAuth();
+        silentAuth();
 
         function applyConfig() {
             document.getElementById('editable-title').innerText = currentConfig.title;
             document.getElementById('editable-subtitle').innerText = currentConfig.subtitle;
             document.getElementById('status-text').innerText = currentConfig.textAuthor;
-            document.getElementById('room-instruction').innerText = currentConfig.textRoomInstr;
-            document.getElementById('res-tag').innerText = currentConfig.textResTag;
-            document.getElementById('res-reset-btn').innerText = currentConfig.textResetBtn;
-
+            
             const bgLayer = document.getElementById('dynamic-bg');
             const videoEl = document.getElementById('bg-video');
 
@@ -370,10 +356,6 @@
             document.getElementById('admin-c2').value = currentConfig.color2;
             document.getElementById('admin-video').value = currentConfig.bgVideo || "";
             document.getElementById('admin-bg-img').value = currentConfig.bgImage || "";
-            document.getElementById('admin-txt-author').value = currentConfig.textAuthor;
-            document.getElementById('admin-txt-room').value = currentConfig.textRoomInstr;
-            document.getElementById('admin-txt-restag').value = currentConfig.textResTag;
-            document.getElementById('admin-txt-reset').value = currentConfig.textResetBtn;
 
             const songContainer = document.getElementById('songs-editor-container');
             songContainer.innerHTML = '';
@@ -396,7 +378,8 @@
 
         window.updateAndSaveConfig = async () => {
             if (!user) {
-                alert("Autenticación pendiente. Inténtalo en un segundo.");
+                alert("Conectando con el servidor... Inténtalo de nuevo.");
+                silentAuth();
                 return;
             }
             const songInputs = document.querySelectorAll('.song-field');
@@ -414,18 +397,18 @@
                 color2: document.getElementById('admin-c2').value,
                 bgVideo: document.getElementById('admin-video').value,
                 bgImage: document.getElementById('admin-bg-img').value,
-                textAuthor: document.getElementById('admin-txt-author').value,
-                textRoomInstr: document.getElementById('admin-txt-room').value,
-                textResTag: document.getElementById('admin-txt-restag').value,
-                textResetBtn: document.getElementById('admin-txt-reset').value,
+                textAuthor: "Producido por André d'Lynae",
+                textRoomInstr: currentConfig.textRoomInstr,
+                textResTag: currentConfig.textResTag,
+                textResetBtn: currentConfig.textResetBtn,
                 songs: updatedSongs
             };
 
             try {
                 await setDoc(configDocRef, newConfig);
-                alert("Nube Sincronizada.");
+                alert("Cambios guardados exitosamente.");
                 closeAdmin();
-            } catch (e) { alert("Error al guardar: " + e.message); }
+            } catch (e) { alert("Permiso denegado: " + e.message); }
         };
 
         window.toggleObject = (btn, name) => {
@@ -483,9 +466,13 @@
         for(let i=0; i<12; i++) createTree();
 
         window.openLogin = () => {
-            const u = prompt("User:");
-            const p = prompt("Key:");
-            if(u === 'asaehvi' && p === 'notasdazul') document.getElementById('admin-panel').classList.add('open');
+            const u = prompt("Usuario de edición:");
+            const p = prompt("Contraseña:");
+            if(u === 'asaehvi' && p === 'notasdazul') {
+                document.getElementById('admin-panel').classList.add('open');
+            } else {
+                alert("Acceso denegado.");
+            }
         };
         window.closeAdmin = () => document.getElementById('admin-panel').classList.remove('open');
     </script>
