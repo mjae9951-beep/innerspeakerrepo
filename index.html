@@ -157,10 +157,10 @@
             <button onclick="closeAdmin()" class="text-xs opacity-50 uppercase">Cerrar</button>
         </div>
         <div class="admin-content" id="admin-form">
-            <!-- Campos dinámicos aquí -->
+            <p class="text-xs opacity-50 animate-pulse">Cargando base de datos...</p>
         </div>
         <div class="p-4 bg-zinc-900">
-            <button onclick="saveAdmin()" class="w-full bg-orange-600 py-4 font-bold text-xs uppercase rounded">Guardar Cambios</button>
+            <button id="save-btn" onclick="saveAdmin()" class="w-full bg-orange-600 py-4 font-bold text-xs uppercase rounded opacity-50" disabled>Autenticando...</button>
         </div>
     </div>
 
@@ -171,25 +171,14 @@
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'innerspeaker-pro-v3';
         
-        // Configuración Maestra (11 Canciones)
         let config = {
             title: "INNERSPEAKER",
             subtitle: "TAME IMPALA",
             footer: "POR ANDRÉ D'LYNAE • PSICODELIA PURA",
             bgUrl: "https://cdn.pixabay.com/video/2024/08/05/224962_large.mp4",
-            songs: [
-                { id: 0, title: "It Is Not Meant To Be", desc: "La sensación de lo inalcanzable.", crit: "Acepta que algunas cosas no son.", url: "https://youtu.be/3a7jLiSCtfU" },
-                { id: 1, title: "Desire Be Desire Go", desc: "El deseo es una rueda que no para.", crit: "Deja ir la necesidad de control.", url: "https://youtu.be/Mc8LpXv_Xv0" },
-                { id: 2, title: "Alter Ego", desc: "La única persona que te cambia eres tú.", crit: "Tu peor enemigo eres tú.", url: "https://youtu.be/VpLXxFhy7s4" },
-                { id: 3, title: "Lucidity", desc: "Un destello de claridad geométrica.", crit: "La verdad duele pero libera.", url: "https://youtu.be/fM_LIsA3vH8" },
-                { id: 4, title: "Why Won't You Make Up Your Mind?", desc: "Indecisión en un bucle eterno.", crit: "La parálisis es muerte.", url: "https://youtu.be/Mv07Quv60S4" },
-                { id: 5, title: "Solitude Is Bliss", desc: "No hay nadie aquí, y es perfecto.", crit: "Nadie te necesita tanto como crees.", url: "https://youtu.be/N7eGu_p2jLk" },
-                { id: 6, title: "Jeremy's Storm", desc: "Tormenta instrumental sin palabras.", crit: "El caos también tiene orden.", url: "https://youtu.be/XyS0_eYp8X4" },
-                { id: 7, title: "Expectation", desc: "La brecha entre mente y realidad.", crit: "Tus expectativas son tu prisión.", url: "https://youtu.be/i6Hm8SJF668" },
-                { id: 8, title: "The Bold Arrow of Time", desc: "El tiempo solo va en una dirección.", crit: "El pasado es un peso muerto.", url: "https://youtu.be/K-8C0q_97G8" },
-                { id: 9, title: "Runway, Houses, City, Clouds", desc: "Viendo el mundo desde arriba.", crit: "Todo parece pequeño desde aquí.", url: "https://youtu.be/Yp83uUv96vI" },
-                { id: 10, title: "I Don't Really Mind", desc: "Al final, nada importa tanto.", crit: "Relájate, nada es tan grave.", url: "https://youtu.be/E-i_FNoV94E" }
-            ]
+            songs: Array.from({length: 11}, (_, i) => ({
+                id: i, title: `Canción ${i+1}`, desc: "Descripción pendiente", crit: "Crítica pendiente", url: "#"
+            }))
         };
 
         const OBJECTS = ['Espejo', 'Ventana', 'Reloj', 'Libreta', 'Audífonos', 'Vinilo', 'Cama', 'Lámpara', 'Silla'];
@@ -197,28 +186,50 @@
 
         async function init() {
             try {
-                const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-                if (!configStr) { apply(); setupUI(); return; }
-                
-                const app = initializeApp(JSON.parse(configStr));
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
+
+                // Regla 3: Auth antes que nada
+                const initAuth = async () => {
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (e) {
+                        console.error("Auth Failed:", e);
+                    }
+                };
+
+                await initAuth();
 
                 onAuthStateChanged(auth, u => {
                     user = u;
                     if (u) {
+                        const saveBtn = document.getElementById('save-btn');
+                        if (saveBtn) {
+                            saveBtn.disabled = false;
+                            saveBtn.classList.remove('opacity-50');
+                            saveBtn.innerText = "Guardar Cambios";
+                        }
+                        
+                        // Escuchar cambios públicos
                         onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'main'), snap => {
-                            if (snap.exists()) { config = {...config, ...snap.data()}; apply(); }
-                        });
+                            if (snap.exists()) { 
+                                config = snap.data(); 
+                                apply(); 
+                            }
+                        }, (err) => console.error("Snapshot error:", err));
                     }
                 });
 
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (e) { apply(); }
+            } catch (e) {
+                console.error("Initialization error:", e);
+                apply(); // Usar fallback si falla todo
+            }
             setupUI();
         }
 
@@ -229,13 +240,13 @@
 
             const video = document.getElementById('bg-video');
             const img = document.getElementById('bg-image');
-            const url = config.bgUrl;
+            const url = config.bgUrl || "";
 
             const isVideo = url.match(/\.(mp4|webm|ogg)$/) || url.includes('pixabay.com/video');
 
             if (isVideo) {
                 img.style.opacity = "0";
-                video.src = url;
+                if (video.src !== url) video.src = url;
                 video.style.opacity = "0.4";
                 video.play().catch(() => {});
             } else {
@@ -247,6 +258,7 @@
 
         function setupUI() {
             const grid = document.getElementById('objects-grid');
+            if (!grid) return;
             grid.innerHTML = '';
             OBJECTS.forEach(obj => {
                 const btn = document.createElement('button');
@@ -266,65 +278,63 @@
         }
 
         window.goTo = (id) => {
-            document.querySelectorAll('.screen').forEach(s => {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(s => {
                 s.classList.remove('active');
                 setTimeout(() => s.style.display = 'none', 600);
             });
             setTimeout(() => {
                 const target = document.getElementById(`screen-${id}`);
-                target.style.display = 'flex';
-                setTimeout(() => target.classList.add('active'), 50);
+                if (target) {
+                    target.style.display = 'flex';
+                    setTimeout(() => target.classList.add('active'), 50);
+                }
             }, 650);
         };
 
         window.setVoice = (vType) => {
             goTo('loading');
             setTimeout(() => {
-                // Lógica de sintonía: selecciona una canción de la lista editada
-                const index = Math.floor(Math.random() * config.songs.length);
-                const song = config.songs[index];
-                
+                const song = config.songs[Math.floor(Math.random() * config.songs.length)];
                 document.getElementById('res-title').innerText = song.title;
                 document.getElementById('res-desc').innerText = song.desc;
-                document.getElementById('res-critique').innerText = vType === 'kind' ? "Sintonía amable: " + song.crit : "Crítica interna: " + song.crit;
+                document.getElementById('res-critique').innerText = vType === 'kind' ? "Tono amable: " + song.crit : "Tono crítico: " + song.crit;
                 document.getElementById('res-link').href = song.url;
                 goTo('result');
             }, 2500);
         };
 
-        // ADMIN FUNCTIONS
         window.openLogin = () => {
             const p = prompt("Código:");
             if (p === 'notasdazul') {
-                const panel = document.getElementById('admin-panel');
-                panel.classList.add('open');
+                document.getElementById('admin-panel').classList.add('open');
                 renderAdmin();
             }
         };
+        
         window.closeAdmin = () => document.getElementById('admin-panel').classList.remove('open');
 
         function renderAdmin() {
             const form = document.getElementById('admin-form');
             let html = `
-                <label class="text-[10px] uppercase opacity-50 mb-1 block">Título Web</label>
+                <label class="text-[10px] uppercase opacity-50 mb-1 block">Título</label>
                 <input type="text" id="in-title" class="admin-input" value="${config.title}">
                 <label class="text-[10px] uppercase opacity-50 mb-1 block">Subtítulo</label>
                 <input type="text" id="in-subtitle" class="admin-input" value="${config.subtitle}">
                 <label class="text-[10px] uppercase opacity-50 mb-1 block">Créditos</label>
                 <input type="text" id="in-footer" class="admin-input" value="${config.footer}">
-                <label class="text-[10px] uppercase opacity-50 mb-1 block">URL Fondo (Vídeo o Foto)</label>
+                <label class="text-[10px] uppercase opacity-50 mb-1 block">URL Fondo (MP4 o Imagen)</label>
                 <input type="text" id="in-bg" class="admin-input" value="${config.bgUrl}">
-                
-                <h4 class="text-orange-500 font-bold text-xs mt-6 mb-4 uppercase">Gestión de Canciones (11)</h4>
+                <h4 class="text-orange-500 font-bold text-[10px] mt-6 mb-4 uppercase">Canciones</h4>
             `;
             
             config.songs.forEach((s, i) => {
                 html += `
-                    <div class="mb-6 p-3 bg-white/5 rounded">
-                        <label class="text-[9px] opacity-40">Canción ${i+1}</label>
-                        <input type="text" id="song-t-${i}" class="admin-input mt-1" placeholder="Título" value="${s.title}">
+                    <div class="mb-4 p-3 bg-white/5 rounded">
+                        <input type="text" id="song-t-${i}" class="admin-input" placeholder="Título" value="${s.title}">
                         <input type="text" id="song-d-${i}" class="admin-input" placeholder="Descripción" value="${s.desc}">
-                        <input type="text" id="song-u-${i}" class="admin-input" placeholder="Enlace YouTube/Spotify" value="${s.url}">
+                        <input type="text" id="song-c-${i}" class="admin-input" placeholder="Crítica" value="${s.crit}">
+                        <input type="text" id="song-u-${i}" class="admin-input mb-0" placeholder="Link" value="${s.url}">
                     </div>
                 `;
             });
@@ -332,12 +342,18 @@
         }
 
         window.saveAdmin = async () => {
-            if (!user) return alert("Error de Auth");
+            // Regla 3: Guardar con usuario
+            if (!user) return alert("Error: No autenticado. Espera un momento.");
             
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.disabled = true;
+            saveBtn.innerText = "Guardando...";
+
             const updatedSongs = config.songs.map((s, i) => ({
-                ...s,
+                id: i,
                 title: document.getElementById(`song-t-${i}`).value,
                 desc: document.getElementById(`song-d-${i}`).value,
+                crit: document.getElementById(`song-c-${i}`).value,
                 url: document.getElementById(`song-u-${i}`).value
             }));
 
@@ -350,10 +366,16 @@
             };
 
             try {
+                // Regla 1: Path estricto
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'main'), newConfig);
-                alert("Configuración sincronizada en la nube.");
+                alert("Cambios guardados exitosamente.");
                 closeAdmin();
-            } catch(e) { alert("Error al guardar: " + e.message); }
+            } catch(e) { 
+                alert("Error de Firestore: " + e.message); 
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerText = "Guardar Cambios";
+            }
         };
 
         init();
