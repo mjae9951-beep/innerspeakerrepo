@@ -56,7 +56,7 @@
 
         .tree {
             position: absolute;
-            width: 150px; height: 150px;
+            width: 120px; height: 120px;
             color: rgba(20, 40, 30, 0.4);
             transform-origin: center;
             pointer-events: none;
@@ -77,7 +77,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 2rem;
+            padding: 1.5rem;
             text-align: center;
             opacity: 0;
             transition: opacity 0.8s ease;
@@ -87,42 +87,46 @@
         .screen.active { display: flex; opacity: 1; }
 
         .object-btn {
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(8px);
-            padding: 1rem;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 0.7rem;
+            padding: 0.75rem 0.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.6rem;
             letter-spacing: 0.1em;
             text-transform: uppercase;
+            border-radius: 4px;
         }
 
         .object-btn.selected {
             background: var(--autumn-orange);
             color: white;
             border-color: var(--autumn-orange);
-            transform: scale(0.92);
+            transform: scale(0.95);
         }
 
         .voice-btn {
             font-family: 'Permanent Marker', cursive;
-            font-size: 2.5rem;
+            font-size: 2rem;
             transition: color 0.3s, transform 0.3s;
         }
 
-        .voice-btn:hover { color: var(--autumn-orange); transform: scale(1.05); }
+        @media (min-width: 640px) {
+            .voice-btn { font-size: 3rem; }
+            .object-btn { font-size: 0.75rem; padding: 1.25rem; }
+        }
 
         .typewriter { font-family: 'Special Elite', serif; }
 
         .btn-main {
             border: 1px solid var(--text-off);
-            padding: 0.75rem 2.5rem;
+            padding: 0.75rem 2rem;
             text-transform: uppercase;
             font-weight: 900;
             letter-spacing: 0.2em;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             transition: all 0.3s;
-            background: rgba(0,0,0,0.1);
+            background: rgba(0,0,0,0.2);
             backdrop-filter: blur(4px);
         }
 
@@ -132,30 +136,45 @@
         }
 
         #secret-trigger {
-            position: fixed; top: 0; right: 0; width: 60px; height: 60px;
+            position: fixed; top: 0; right: 0; width: 50px; height: 50px;
             z-index: 9999; cursor: pointer; background: transparent;
         }
 
         #admin-panel {
-            position: fixed; top: 0; right: -450px; width: 400px; height: 100%;
-            background: #0f0f0f; color: #eee; z-index: 10000; transition: 0.4s;
-            padding: 2rem; overflow-y: auto; border-left: 1px solid #333;
-            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+            position: fixed; top: 0; right: -100%; width: 100%; max-width: 450px; height: 100%;
+            background: #0a0a0a; color: #eee; z-index: 10000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 1.5rem; overflow-y: auto; border-left: 1px solid #222;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.8);
         }
         #admin-panel.open { right: 0; }
+        
         .admin-input {
-            background: #1a1a1a; border: 1px solid #333; color: white;
-            width: 100%; padding: 0.6rem; margin-bottom: 1rem; font-size: 0.75rem;
-            border-radius: 4px;
+            background: #151515; border: 1px solid #333; color: white;
+            width: 100%; padding: 0.7rem; margin-bottom: 1rem; font-size: 0.8rem;
+            border-radius: 6px; outline: none; transition: border-color 0.2s;
         }
-        label { font-size: 0.65rem; text-transform: uppercase; opacity: 0.5; font-weight: 900; letter-spacing: 0.1em; margin-bottom: 0.4rem; display: block; }
+        .admin-input:focus { border-color: var(--autumn-orange); }
+
+        .song-editor-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            border-radius: 12px;
+        }
+        
+        label { font-size: 0.6rem; text-transform: uppercase; opacity: 0.6; font-weight: 900; letter-spacing: 0.15em; margin-bottom: 0.5rem; display: block; color: var(--autumn-orange); }
+
+        /* Custom Scrollbar */
+        #admin-panel::-webkit-scrollbar { width: 6px; }
+        #admin-panel::-webkit-scrollbar-track { background: transparent; }
+        #admin-panel::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <div class="grain"></div>
     
-    <!-- Capas de Fondo -->
     <video id="bg-video" autoplay muted loop playsinline></video>
     <div class="bg-layer" id="dynamic-bg"></div>
     <div id="trees-container"></div>
@@ -164,95 +183,111 @@
 
     <!-- PANTALLA 1: LANDING -->
     <div id="screen-landing" class="screen active">
-        <h1 id="editable-title" class="text-6xl sm:text-8xl font-black tracking-tighter mb-2">INNERSPEAKER</h1>
-        <h2 id="editable-subtitle" class="text-xl sm:text-2xl font-light tracking-[0.5em] mb-16 opacity-80">TAME IMPALA</h2>
-        <button onclick="goTo('room')" id="btn-start" class="btn-main opacity-40 pointer-events-none">Iniciando...</button>
-        <p id="status-text" class="text-[9px] mt-6 uppercase opacity-40 tracking-widest">Sincronizando flujo de conciencia...</p>
+        <h1 id="editable-title" class="text-5xl sm:text-8xl font-black tracking-tighter mb-2">INNERSPEAKER</h1>
+        <h2 id="editable-subtitle" class="text-lg sm:text-2xl font-light tracking-[0.4em] mb-12 sm:mb-16 opacity-80 uppercase">TAME IMPALA</h2>
+        <button onclick="goTo('room')" id="btn-start" class="btn-main opacity-40 pointer-events-none">Sincronizando...</button>
+        <p id="status-text" class="text-[8px] sm:text-[9px] mt-6 uppercase opacity-40 tracking-widest">Conectando con la red psicodélica...</p>
     </div>
 
     <!-- PANTALLA 2: ROOM -->
     <div id="screen-room" class="screen">
-        <h2 class="text-[10px] font-black uppercase tracking-[0.4em] mb-8 opacity-40">Percepción del entorno</h2>
-        <div class="grid grid-cols-3 gap-3 w-full max-w-sm" id="objects-grid"></div>
-        <p id="room-instruction" class="mt-8 text-[10px] opacity-40 uppercase tracking-widest">Selecciona 3 fragmentos de tu realidad</p>
+        <h2 class="text-[9px] font-black uppercase tracking-[0.4em] mb-6 sm:mb-8 opacity-40">Percepción del entorno</h2>
+        <div class="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-sm" id="objects-grid"></div>
+        <p id="room-instruction" class="mt-8 text-[9px] opacity-40 uppercase tracking-widest">Selecciona 3 fragmentos de tu realidad</p>
     </div>
 
     <!-- PANTALLA 3: VOICE -->
     <div id="screen-voice" class="screen">
-        <h2 class="text-[10px] font-black uppercase tracking-[0.4em] mb-12 opacity-40">La Voz Interior</h2>
-        <div class="flex flex-col gap-8">
+        <h2 class="text-[9px] font-black uppercase tracking-[0.4em] mb-12 opacity-40">La Voz Interior</h2>
+        <div class="flex flex-col gap-6 sm:gap-8">
             <button onclick="setVoice('kind')" class="voice-btn">Amable</button>
-            <div class="h-[1px] bg-white/10 w-32 mx-auto"></div>
+            <div class="h-[1px] bg-white/10 w-24 sm:w-32 mx-auto"></div>
             <button onclick="setVoice('critical')" class="voice-btn">Crítica</button>
         </div>
     </div>
 
     <!-- PANTALLA 4: LOADING -->
     <div id="screen-loading" class="screen">
-        <div class="w-12 h-12 border border-white/10 border-t-white rounded-full animate-spin mb-6"></div>
-        <p id="loading-msg" class="typewriter text-[10px] uppercase tracking-[0.3em] animate-pulse">Buscando resonancia...</p>
+        <div class="w-10 h-10 border border-white/10 border-t-white rounded-full animate-spin mb-6"></div>
+        <p id="loading-msg" class="typewriter text-[9px] uppercase tracking-[0.3em] animate-pulse">Buscando resonancia armónica...</p>
     </div>
 
     <!-- PANTALLA 5: RESULT -->
     <div id="screen-result" class="screen">
-        <div class="max-w-md">
-            <h3 id="res-title" class="text-4xl sm:text-5xl font-black uppercase tracking-tighter mb-4"></h3>
-            <p id="res-tag" class="text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-6 opacity-60"></p>
-            <div class="h-[1px] bg-white/20 w-full mb-8"></div>
-            <p id="res-desc" class="typewriter text-sm leading-relaxed mb-6"></p>
-            <p id="res-critique" class="typewriter text-[11px] italic opacity-40 mb-12"></p>
+        <div class="max-w-md px-4">
+            <h3 id="res-title" class="text-3xl sm:text-5xl font-black uppercase tracking-tighter mb-3"></h3>
+            <p id="res-tag" class="text-[9px] font-bold text-orange-400 uppercase tracking-widest mb-5 opacity-60"></p>
+            <div class="h-[1px] bg-white/10 w-full mb-6 sm:mb-8"></div>
+            <p id="res-desc" class="typewriter text-xs sm:text-sm leading-relaxed mb-6"></p>
+            <p id="res-critique" class="typewriter text-[10px] sm:text-[11px] italic opacity-40 mb-10 sm:mb-12"></p>
             
-            <div class="flex flex-col sm:flex-row gap-6 items-center justify-center">
-                <a id="res-link" href="#" target="_blank" class="btn-main">Escuchar</a>
-                <button onclick="location.reload()" class="text-[9px] uppercase font-black opacity-30 hover:opacity-100 tracking-widest transition-opacity">Volver al silencio</button>
+            <div class="flex flex-col gap-4 items-center justify-center">
+                <a id="res-link" href="#" target="_blank" class="btn-main w-full sm:w-auto">Escuchar Track</a>
+                <button onclick="location.reload()" class="text-[8px] uppercase font-black opacity-30 hover:opacity-100 tracking-widest transition-opacity mt-4">Reiniciar Conciencia</button>
             </div>
         </div>
     </div>
 
-    <!-- PANEL DE ADMIN MEJORADO -->
+    <!-- PANEL DE ADMIN AVANZADO -->
     <div id="admin-panel">
-        <h2 class="font-black text-orange-500 mb-6 tracking-tighter">ESTÉTICA DEL SISTEMA</h2>
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="font-black text-orange-500 tracking-tighter text-2xl">CONTROL CORE</h2>
+            <button onclick="closeAdmin()" class="text-xs opacity-50 uppercase font-bold tracking-widest">Cerrar</button>
+        </div>
         
-        <label>Título Principal</label>
-        <input type="text" id="admin-title" class="admin-input" placeholder="INNERSPEAKER">
-        
-        <label>Subtítulo</label>
-        <input type="text" id="admin-subtitle" class="admin-input" placeholder="TAME IMPALA">
+        <div class="mb-12">
+            <h3 class="text-[10px] font-black mb-6 uppercase text-orange-300 border-b border-orange-300/10 pb-2">Estética del Sistema</h3>
+            <label>Título del Álbum</label>
+            <input type="text" id="admin-title" class="admin-input">
+            
+            <label>Artista / Subtítulo</label>
+            <input type="text" id="admin-subtitle" class="admin-input">
 
-        <div class="grid grid-cols-2 gap-2">
-            <div>
-                <label>Color 1 (Aura)</label>
-                <input type="color" id="admin-c1" class="admin-input h-12">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label>Color Aura (Gradiente)</label>
+                    <input type="color" id="admin-c1" class="admin-input h-12 cursor-pointer">
+                </div>
+                <div>
+                    <label>Color Mente (Fondo)</label>
+                    <input type="color" id="admin-c2" class="admin-input h-12 cursor-pointer">
+                </div>
             </div>
-            <div>
-                <label>Color 2 (Mente)</label>
-                <input type="color" id="admin-c2" class="admin-input h-12">
+
+            <label>Fondo de Video (URL .mp4)</label>
+            <input type="text" id="admin-video" class="admin-input" placeholder="https://...">
+            
+            <label>Fondo de Imagen (URL .jpg/.png)</label>
+            <input type="text" id="admin-bg-img" class="admin-input" placeholder="https://...">
+            
+            <label>Opacidad del Bosque (0 a 1)</label>
+            <input type="number" id="admin-tree-op" step="0.1" min="0" max="1" class="admin-input">
+        </div>
+
+        <div class="mb-12">
+            <h3 class="text-[10px] font-black mb-6 uppercase text-orange-300 border-b border-orange-300/10 pb-2">Gestión de Canciones (YouTube)</h3>
+            <div id="songs-editor-container">
+                <!-- Inyectado vía JS -->
             </div>
         </div>
 
-        <div class="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
-            <h3 class="text-[10px] font-black mb-4 uppercase text-orange-300">Multimedia de Fondo</h3>
-            
-            <label>URL Video de Fondo (MP4)</label>
-            <input type="text" id="admin-video" class="admin-input" placeholder="https://ejemplo.com/video.mp4">
-            
-            <label>URL Imagen de Fondo (HQ)</label>
-            <input type="text" id="admin-bg-img" class="admin-input" placeholder="https://ejemplo.com/fondo.jpg">
-            
-            <label>Opacidad de Árboles (0.1 - 1)</label>
-            <input type="number" id="admin-tree-op" step="0.1" min="0" max="1" class="admin-input" placeholder="0.4">
+        <div class="sticky bottom-0 bg-[#0a0a0a] pt-4 pb-6">
+            <button onclick="updateAndSaveConfig()" class="w-full bg-orange-600 py-4 text-xs font-black uppercase rounded shadow-xl hover:bg-orange-500 transition-all transform active:scale-95">Sincronizar Cambios</button>
         </div>
-
-        <button onclick="updateAndSaveConfig()" class="w-full bg-orange-600 py-3 mt-6 text-xs font-black uppercase rounded shadow-lg">Sincronizar Cambios</button>
-        <button onclick="closeAdmin()" class="w-full py-3 mt-2 text-[10px] opacity-50 uppercase font-bold tracking-widest">Cerrar Panel</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
-        // Lógica de Mapeo Interno
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-innerspeaker';
+        const configDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'main');
+
         const OBJECT_MAP = {
             'Audífonos': { songs: ['Alter Ego', 'Solitude Is Bliss'] },
             'Espejo': { songs: ['Alter Ego', 'Expectation'] },
@@ -269,22 +304,6 @@
             kind: ['Solitude Is Bliss', 'Lucidity', 'Runway, Houses, City, Clouds', 'I Don\'t Really Mind', 'Desire Be Desire Go'],
             critical: ['Alter Ego', 'Expectation', 'Why Won’t You Make Up Your Mind?', 'It Is Not Meant To Be', 'Jeremy\'s Storm', 'The Bold Arrow Of Time']
         };
-
-        const fbConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-        const firebaseConfig = fbConfigRaw ? JSON.parse(fbConfigRaw) : {
-            apiKey: "AIzaSyCXcM54HHeambvpHkJY1-N1G3Q7UPcPOj8",
-            authDomain: "innerspeaker-568f3.firebaseapp.com",
-            projectId: "innerspeaker-568f3",
-            storageBucket: "innerspeaker-568f3.firebasestorage.app",
-            messagingSenderId: "945238998266",
-            appId: "1:945238998266:web:661d0080b0d42cb7a59d43"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
-        const auth = getAuth(app);
-        const rawAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-innerspeaker';
-        const configDocRef = doc(db, 'artifacts', rawAppId, 'public', 'data', 'config', 'main');
 
         let user = null;
         let selected = [];
@@ -312,7 +331,7 @@
             ]
         };
 
-        // Generar UI de objetos
+        // Render inicial de botones
         const grid = document.getElementById('objects-grid');
         Object.keys(OBJECT_MAP).forEach(obj => {
             const btn = document.createElement('button');
@@ -322,6 +341,7 @@
             grid.appendChild(btn);
         });
 
+        // Listeners Firestore
         onSnapshot(configDocRef, (snap) => {
             if (snap.exists()) {
                 currentConfig = { ...currentConfig, ...snap.data() };
@@ -333,33 +353,26 @@
         function applyConfig() {
             document.getElementById('editable-title').innerText = currentConfig.title;
             document.getElementById('editable-subtitle').innerText = currentConfig.subtitle;
-            
             const bgLayer = document.getElementById('dynamic-bg');
             const videoEl = document.getElementById('bg-video');
 
-            // Lógica de Fondo Multimedia
             if (currentConfig.bgVideo) {
                 videoEl.src = currentConfig.bgVideo;
                 videoEl.style.opacity = "1";
-                bgLayer.style.opacity = "0.3"; // Mantiene gradiente sutil sobre video
+                bgLayer.style.opacity = "0.3";
             } else {
                 videoEl.style.opacity = "0";
-                videoEl.src = "";
                 bgLayer.style.opacity = "1";
             }
 
             if (currentConfig.bgImage) {
                 bgLayer.style.backgroundImage = `url(${currentConfig.bgImage})`;
-                bgLayer.style.backgroundSize = "cover";
             } else {
                 bgLayer.style.backgroundImage = "none";
                 bgLayer.style.background = `radial-gradient(circle at 50% 100%, ${currentConfig.color1} -20%, ${currentConfig.color2} 40%, var(--bg-deep) 90%)`;
             }
 
-            // Aplicar opacidad a los árboles
-            document.querySelectorAll('.tree').forEach(t => {
-                t.style.opacity = currentConfig.treeOpacity || 0.4;
-            });
+            document.querySelectorAll('.tree').forEach(t => t.style.opacity = currentConfig.treeOpacity);
         }
 
         function updateAdminForm() {
@@ -369,23 +382,59 @@
             document.getElementById('admin-c2').value = currentConfig.color2;
             document.getElementById('admin-video').value = currentConfig.bgVideo || "";
             document.getElementById('admin-bg-img').value = currentConfig.bgImage || "";
-            document.getElementById('admin-tree-op').value = currentConfig.treeOpacity || 0.4;
+            document.getElementById('admin-tree-op').value = currentConfig.treeOpacity;
+
+            const songContainer = document.getElementById('songs-editor-container');
+            songContainer.innerHTML = '';
+            
+            currentConfig.songs.forEach((song, idx) => {
+                const card = document.createElement('div');
+                card.className = 'song-editor-card';
+                card.innerHTML = `
+                    <label>#${idx + 1} TRACK TITLE</label>
+                    <input type="text" data-idx="${idx}" data-field="title" value="${song.title}" class="admin-input song-field">
+                    <label>YOUTUBE URL</label>
+                    <input type="text" data-idx="${idx}" data-field="url" value="${song.url}" class="admin-input song-field" placeholder="https://...">
+                    <label>DESCRIPCIÓN</label>
+                    <textarea data-idx="${idx}" data-field="desc" class="admin-input song-field h-16">${song.desc}</textarea>
+                    <label>CRÍTICA POÉTICA</label>
+                    <input type="text" data-idx="${idx}" data-field="critique" value="${song.critique}" class="admin-input song-field">
+                `;
+                songContainer.appendChild(card);
+            });
         }
 
         window.updateAndSaveConfig = async () => {
             if (!user) return;
+            
+            const songInputs = document.querySelectorAll('.song-field');
+            const updatedSongs = [...currentConfig.songs];
+            
+            songInputs.forEach(input => {
+                const idx = input.getAttribute('data-idx');
+                const field = input.getAttribute('data-field');
+                updatedSongs[idx][field] = input.value;
+            });
+
             const newConfig = {
-                ...currentConfig,
                 title: document.getElementById('admin-title').value,
                 subtitle: document.getElementById('admin-subtitle').value,
                 color1: document.getElementById('admin-c1').value,
                 color2: document.getElementById('admin-c2').value,
                 bgVideo: document.getElementById('admin-video').value,
                 bgImage: document.getElementById('admin-bg-img').value,
-                treeOpacity: parseFloat(document.getElementById('admin-tree-op').value)
+                treeOpacity: parseFloat(document.getElementById('admin-tree-op').value),
+                songs: updatedSongs
             };
-            await setDoc(configDocRef, newConfig);
-            alert("Sistema sincronizado con éxito.");
+
+            try {
+                await setDoc(configDocRef, newConfig);
+                alert("Base de Datos Sincronizada.");
+                closeAdmin();
+            } catch (e) {
+                console.error(e);
+                alert("Error al guardar.");
+            }
         };
 
         window.toggleObject = (btn, name) => {
@@ -396,15 +445,13 @@
                 selected.push(name);
                 btn.classList.add('selected');
             }
-            if (selected.length === 3) { 
-                setTimeout(() => goTo('voice'), 500); 
-            }
+            if (selected.length === 3) setTimeout(() => goTo('voice'), 400);
         };
 
         window.setVoice = (v) => {
             innerVoice = v;
             goTo('loading');
-            setTimeout(() => showResult(), 2500); 
+            setTimeout(() => showResult(), 2000);
         };
 
         function showResult() {
@@ -413,13 +460,12 @@
             let candidateTitle = baseSongs[Math.floor(Math.random() * baseSongs.length)];
 
             if (!TONAL_FAMILIES[innerVoice].includes(candidateTitle)) {
-                const family = TONAL_FAMILIES[innerVoice];
-                candidateTitle = family[Math.floor(Math.random() * family.length)];
+                candidateTitle = TONAL_FAMILIES[innerVoice][Math.floor(Math.random() * TONAL_FAMILIES[innerVoice].length)];
             }
 
-            const result = currentConfig.songs.find(s => s.title === candidateTitle);
+            const result = currentConfig.songs.find(s => s.title === candidateTitle) || currentConfig.songs[0];
             document.getElementById('res-title').innerText = result.title;
-            document.getElementById('res-tag').innerText = "Frecuencia Encontrada";
+            document.getElementById('res-tag').innerText = "Vibración Resonante";
             document.getElementById('res-desc').innerText = result.desc;
             document.getElementById('res-critique').innerText = result.critique;
             document.getElementById('res-link').href = result.url;
@@ -435,8 +481,8 @@
             user = u;
             if (u) {
                 const btn = document.getElementById('btn-start');
-                document.getElementById('status-text').innerText = "Frecuencia estable.";
-                btn.innerText = "ENTRAR";
+                document.getElementById('status-text').innerText = "Frecuencia Estable.";
+                btn.innerText = "ACCEDER";
                 btn.classList.remove('opacity-40', 'pointer-events-none');
             }
         });
@@ -458,7 +504,7 @@
             tree.style.animation = `zoomTree ${20 + Math.random() * 20}s linear ${Math.random() * 10}s infinite`;
             container.appendChild(tree);
         }
-        for(let i=0; i<15; i++) createTree();
+        for(let i=0; i<12; i++) createTree();
 
         window.openLogin = () => {
             const u = prompt("User:");
