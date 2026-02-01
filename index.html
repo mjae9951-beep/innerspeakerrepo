@@ -111,22 +111,33 @@
             color: var(--bg-deep);
         }
 
-        /* ADMIN STYLES */
         #secret-trigger {
-            position: fixed; top: 0; right: 0; width: 40px; height: 40px;
-            z-index: 100; cursor: pointer; opacity: 0;
+            position: fixed; 
+            top: 0; 
+            right: 0; 
+            width: 60px; 
+            height: 60px;
+            z-index: 9999;
+            cursor: pointer; 
+            background: rgba(255, 255, 255, 0.01);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
         #admin-panel {
-            position: fixed; top: 0; right: -400px; width: 350px; height: 100%;
-            background: #111; color: #eee; z-index: 200; transition: 0.4s;
+            position: fixed; top: 0; right: -450px; width: 400px; height: 100%;
+            background: #0f0f0f; color: #eee; z-index: 10000; transition: 0.4s;
             padding: 2rem; overflow-y: auto; border-left: 1px solid #333;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
         }
         #admin-panel.open { right: 0; }
         .admin-input {
-            background: #222; border: 1px solid #444; color: white;
-            width: 100%; padding: 0.5rem; margin-bottom: 1rem; font-size: 0.8rem;
+            background: #1a1a1a; border: 1px solid #333; color: white;
+            width: 100%; padding: 0.6rem; margin-bottom: 1rem; font-size: 0.8rem;
+            border-radius: 4px;
         }
-        .admin-label { display: block; font-size: 10px; text-transform: uppercase; margin-bottom: 4px; color: #888; }
+        .admin-label { display: block; font-size: 10px; text-transform: uppercase; margin-bottom: 4px; color: #888; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -135,8 +146,9 @@
     <div class="bg-layer" id="dynamic-bg"></div>
     <div id="trees-container"></div>
 
-    <!-- Botón secreto en esquina superior derecha -->
-    <div id="secret-trigger" onclick="openLogin()"></div>
+    <div id="secret-trigger" onclick="openLogin()">
+        <span style="font-size: 8px; opacity: 0.1;">.</span>
+    </div>
 
     <!-- PANTALLA 1: LANDING -->
     <div id="screen-landing" class="screen active">
@@ -146,7 +158,7 @@
         <p id="status-text" class="text-[9px] mt-6 uppercase opacity-40">Sintonizando frecuencias...</p>
     </div>
 
-    <!-- PANTALLA 2: CUARTO -->
+    <!-- PANTALLA 2: ROOM -->
     <div id="screen-room" class="screen">
         <h2 class="text-[10px] font-black uppercase tracking-[0.3em] mb-8 opacity-40">Paso 01 / Percepción del entorno</h2>
         <div class="grid grid-cols-3 gap-3 w-full max-w-sm">
@@ -163,7 +175,7 @@
         <p id="room-instruction" class="mt-8 text-[10px] opacity-40 uppercase">Selecciona 3 fragmentos de tu realidad</p>
     </div>
 
-    <!-- PANTALLA 3: VOZ -->
+    <!-- PANTALLA 3: VOICE -->
     <div id="screen-voice" class="screen">
         <h2 class="text-[10px] font-black uppercase tracking-[0.3em] mb-12 opacity-40">Paso 02 / La Voz Interior</h2>
         <div class="flex flex-col gap-8">
@@ -173,13 +185,13 @@
         </div>
     </div>
 
-    <!-- PANTALLA 4: CARGA -->
+    <!-- PANTALLA 4: LOADING -->
     <div id="screen-loading" class="screen">
         <div class="w-16 h-16 border-2 border-white/20 border-t-white rounded-full animate-spin mb-6"></div>
-        <p id="loading-msg" class="typewriter text-xs uppercase tracking-widest animate-pulse">Analizando...</p>
+        <p id="loading-msg" class="typewriter text-xs uppercase tracking-widest animate-pulse">Analizando resonancia...</p>
     </div>
 
-    <!-- PANTALLA 5: RESULTADO -->
+    <!-- PANTALLA 5: RESULT -->
     <div id="screen-result" class="screen">
         <div class="max-w-md">
             <h3 id="res-title" class="text-4xl sm:text-5xl font-black uppercase tracking-tighter mb-4"></h3>
@@ -190,7 +202,7 @@
             
             <div class="flex flex-col sm:flex-row gap-4 items-center justify-center">
                 <a id="res-link" href="#" target="_blank" class="btn-main">Escuchar</a>
-                <button onclick="location.reload()" class="text-[9px] uppercase font-black opacity-30 hover:opacity-100 transition-opacity">Reiniciar Experiencia</button>
+                <button onclick="location.reload()" class="text-[9px] uppercase font-black opacity-30 hover:opacity-100 transition-opacity">Reiniciar</button>
             </div>
         </div>
     </div>
@@ -199,7 +211,7 @@
     <div id="admin-panel">
         <div class="flex justify-between items-center mb-6">
             <h2 class="font-black text-orange-500">CONTROL MAESTRO</h2>
-            <button onclick="closeAdmin()" class="text-xs opacity-50">CERRAR</button>
+            <button onclick="closeAdmin()" class="text-xs opacity-50 hover:opacity-100">CERRAR</button>
         </div>
         
         <label class="admin-label">Título Principal</label>
@@ -208,25 +220,19 @@
         <label class="admin-label">Subtítulo</label>
         <input type="text" id="admin-sub-title" class="admin-input" oninput="syncLiveText('editable-subtitle', this.value)">
 
-        <label class="admin-label">Color de Fondo 1 (Naranja)</label>
-        <input type="color" id="admin-color-1" class="admin-input" oninput="updateLiveColors()">
-        
-        <label class="admin-label">Color de Fondo 2 (Verde)</label>
-        <input type="color" id="admin-color-2" class="admin-input" oninput="updateLiveColors()">
+        <label class="admin-label">Gradiente: Naranja / Verde</label>
+        <div class="flex gap-2 mb-4">
+            <input type="color" id="admin-color-1" class="h-10 w-full bg-transparent border-0" oninput="updateLiveColors()">
+            <input type="color" id="admin-color-2" class="h-10 w-full bg-transparent border-0" oninput="updateLiveColors()">
+        </div>
 
-        <div class="h-[1px] bg-white/10 my-4"></div>
+        <div class="h-[1px] bg-white/10 my-6"></div>
         
-        <h3 class="text-[10px] font-black mb-4 uppercase tracking-widest text-orange-300">Gestión de Canciones</h3>
+        <h3 class="text-[10px] font-black mb-4 uppercase tracking-widest text-orange-300">Base de Datos: 11 Canciones</h3>
         
-        <label class="admin-label">Categoría: AMABLE (Kind)</label>
-        <div id="song-manager-kind"></div>
+        <div id="song-manager-container"></div>
         
-        <div class="h-[1px] bg-white/5 my-4"></div>
-        
-        <label class="admin-label">Categoría: CRÍTICA (Critical)</label>
-        <div id="song-manager-critical"></div>
-        
-        <button onclick="saveGlobalConfig()" class="w-full bg-orange-600 py-3 mt-4 text-xs font-black uppercase rounded shadow-lg hover:bg-orange-500 transition-colors">Guardar Cambios Nube</button>
+        <button onclick="saveGlobalConfig()" class="w-full bg-orange-600 py-3 mt-4 text-xs font-black uppercase rounded shadow-lg hover:bg-orange-500 transition-colors">Sincronizar con la Nube</button>
     </div>
 
     <script type="module">
@@ -253,9 +259,7 @@
         });
         const auth = getAuth(app);
 
-        // Lógica de corrección de ruta para cumplir con segmentos pares (Regla 1)
         const rawAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-innerspeaker';
-        // Si rawAppId ya tiene el formato de ruta (contiene slashes), lo usamos como base, sino armamos la ruta estándar.
         const configDocRef = rawAppId.includes('/') 
             ? doc(db, rawAppId, 'public', 'data', 'config', 'main') 
             : doc(db, 'artifacts', rawAppId, 'public', 'data', 'config', 'main');
@@ -263,32 +267,41 @@
         let user = null;
         let selected = [];
         let innerVoice = null;
+        
+        // BASE DE DATOS COMPLETA DE 11 CANCIONES
         let currentConfig = {
             title: "INNERSPEAKER",
             subtitle: "TAME IMPALA",
             color1: "#c87c4a",
             color2: "#4b6a4a",
-            songs: {
-                kind: [
-                    { title: "Solitude Is Bliss", tag: "Independencia", desc: "No hay nada malo en estar solo.", critique: "Mente calmada.", url: "https://youtu.be/N7eGu_p2jLk" },
-                    { title: "Alter Ego", tag: "Dualidad", desc: "Estás en el borde de algo nuevo.", critique: "Cambio interno.", url: "https://youtu.be/VpLXxFhy7s4" }
-                ],
-                critical: [
-                    { title: "It Is Not Meant To Be", tag: "Aceptación", desc: "A veces las cosas no encajan.", critique: "Realidad pura.", url: "https://youtu.be/3a7jLiSCtfU" }
-                ]
-            }
+            songs: [
+                { title: "It Is Not Meant To Be", tag: "Distancia", desc: "La sensación de que algo está fuera de tu alcance por naturaleza.", critique: "Aceptación de lo imposible.", url: "https://youtu.be/3a7jLiSCtfU" },
+                { title: "Desire Be Desire Go", tag: "Movimiento", desc: "El deseo es una fuerza que fluye y se desvanece constantemente.", critique: "Fuga cerebral.", url: "https://youtu.be/L_u7IPrN2-8" },
+                { title: "Alter Ego", tag: "Dualidad", desc: "La única persona que realmente puede cambiarte eres tú mismo.", critique: "Conversación interna.", url: "https://youtu.be/VpLXxFhy7s4" },
+                { title: "Lucidity", tag: "Claridad", desc: "Momentos breves donde todo parece tener un sentido geométrico.", critique: "El despertar.", url: "https://youtu.be/fM_LIsA3vH8" },
+                { title: "Why Won’t You Make Up Your Mind?", tag: "Indecisión", desc: "La parálisis que viene de analizar demasiado cada paso.", critique: "Bucle infinito.", url: "https://youtu.be/CwIV58Fk6GQ" },
+                { title: "Solitude Is Bliss", tag: "Libertad", desc: "No hay nada más expansivo que la soledad por elección.", critique: "Independencia pura.", url: "https://youtu.be/N7eGu_p2jLk" },
+                { title: "Jeremy's Storm", tag: "Caos", desc: "Una tormenta instrumental que limpia el ruido de la mente.", critique: "Limpieza sónica.", url: "https://youtu.be/kU_pLgPscvA" },
+                { title: "Expectation", tag: "Ilusión", desc: "La brecha dolorosa entre lo que imaginamos y lo que ocurre.", critique: "Realismo psicodélico.", url: "https://youtu.be/i6Hm8SJF668" },
+                { title: "The Bold Arrow Of Time", tag: "Blues", desc: "El tiempo avanza como una flecha pesada y distorsionada.", critique: "Anacronismo.", url: "https://youtu.be/S4pI6v_YQwI" },
+                { title: "Runway, Houses, City, Clouds", tag: "Perspectiva", desc: "Mirar el mundo desde lo más alto para entender su pequeñez.", critique: "Viaje astral.", url: "https://youtu.be/t_uI-H09_f0" },
+                { title: "I Don't Really Mind", tag: "Final", desc: "Al final del día, nada importa tanto como la calma.", critique: "Cierre de ciclo.", url: "https://youtu.be/q09R69Yf0Hk" }
+            ]
         };
 
-        // Escucha cambios en tiempo real desde Firestore
         onSnapshot(configDocRef, (snap) => {
             if (snap.exists()) {
-                currentConfig = snap.data();
+                const data = snap.data();
+                // Asegurar que si la nube no tiene canciones o tiene pocas, mantengamos las 11
+                if (!data.songs || data.songs.length < 11) {
+                    saveGlobalConfig(true); 
+                } else {
+                    currentConfig = data;
+                }
                 applyConfig();
             } else {
                 saveGlobalConfig(true); 
             }
-        }, (error) => {
-            console.error("Error en Firestore:", error);
         });
 
         function applyConfig() {
@@ -296,17 +309,13 @@
             document.getElementById('editable-subtitle').innerText = currentConfig.subtitle;
             document.getElementById('dynamic-bg').style.background = `radial-gradient(circle at 50% 100%, ${currentConfig.color1} -20%, ${currentConfig.color2} 40%, var(--bg-deep) 90%)`;
             
-            const titleInput = document.getElementById('admin-main-title');
-            const subInput = document.getElementById('admin-sub-title');
-            const c1Input = document.getElementById('admin-color-1');
-            const c2Input = document.getElementById('admin-color-2');
-
-            if(titleInput) titleInput.value = currentConfig.title;
-            if(subInput) subInput.value = currentConfig.subtitle;
-            if(c1Input) c1Input.value = currentConfig.color1;
-            if(c2Input) c2Input.value = currentConfig.color2;
-            
-            renderSongLists();
+            if(document.getElementById('admin-main-title')) {
+                document.getElementById('admin-main-title').value = currentConfig.title;
+                document.getElementById('admin-sub-title').value = currentConfig.subtitle;
+                document.getElementById('admin-color-1').value = currentConfig.color1;
+                document.getElementById('admin-color-2').value = currentConfig.color2;
+            }
+            renderSongList();
         }
 
         window.syncLiveText = (id, val) => { 
@@ -327,71 +336,63 @@
             if (!user) return;
             try {
                 await setDoc(configDocRef, currentConfig);
-                if (!silent) alert("Configuración guardada.");
-            } catch (e) {
-                console.error("Error al guardar:", e);
-            }
+                if (!silent) alert("Sincronización completa: 11 canciones en la nube.");
+            } catch (e) { console.error(e); }
         };
 
-        function renderSongLists() {
-            const renderCategory = (cat, containerId) => {
-                const container = document.getElementById(containerId);
-                if (!container) return;
-                container.innerHTML = '';
-                currentConfig.songs[cat].forEach((song, idx) => {
-                    const div = document.createElement('div');
-                    div.className = "mb-6 p-3 bg-white/5 rounded border border-white/10";
-                    div.innerHTML = `
-                        <label class="text-[8px] opacity-50 uppercase mb-1 block">Título</label>
-                        <input class="admin-input mb-1" value="${song.title}" oninput="currentConfig.songs.${cat}[${idx}].title = this.value">
-                        <label class="text-[8px] opacity-50 uppercase mb-1 block">YouTube URL</label>
-                        <input class="admin-input mb-1" placeholder="URL YouTube" value="${song.url}" oninput="currentConfig.songs.${cat}[${idx}].url = this.value">
-                        <label class="text-[8px] opacity-50 uppercase mb-1 block">Descripción</label>
-                        <textarea class="admin-input mb-1 h-12" oninput="currentConfig.songs.${cat}[${idx}].desc = this.value">${song.desc}</textarea>
-                    `;
-                    container.appendChild(div);
-                });
-            };
-            renderCategory('kind', 'song-manager-kind');
-            renderCategory('critical', 'song-manager-critical');
+        function renderSongList() {
+            const container = document.getElementById('song-manager-container');
+            if (!container) return;
+            container.innerHTML = '';
+            currentConfig.songs.forEach((song, idx) => {
+                const div = document.createElement('div');
+                div.className = "mb-6 p-4 bg-white/5 rounded-lg border border-white/10";
+                div.innerHTML = `
+                    <div class="flex justify-between mb-2">
+                        <span class="text-[9px] font-black text-orange-400">PISTA ${String(idx + 1).padStart(2, '0')}</span>
+                    </div>
+                    <label class="admin-label">Título</label>
+                    <input class="admin-input mb-2" value="${song.title}" oninput="currentConfig.songs[${idx}].title = this.value">
+                    <label class="admin-label">URL YouTube</label>
+                    <input class="admin-input mb-2" value="${song.url}" oninput="currentConfig.songs[${idx}].url = this.value">
+                    <label class="admin-label">Descripción Metafísica</label>
+                    <textarea class="admin-input h-20" oninput="currentConfig.songs[${idx}].desc = this.value">${song.desc}</textarea>
+                `;
+                container.appendChild(div);
+            });
         }
 
         window.openLogin = () => {
-            const u = prompt("Usuario:");
-            const p = prompt("Contraseña:");
+            const u = prompt("Admin User:");
+            const p = prompt("Admin Key:");
             if(u === 'asaehvi' && p === 'notasdazul') {
                 document.getElementById('admin-panel').classList.add('open');
-            } else {
-                alert("Acceso denegado.");
             }
         };
 
         window.closeAdmin = () => document.getElementById('admin-panel').classList.remove('open');
 
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-        };
-
+        // LÓGICA DE LA EXPERIENCIA
         onAuthStateChanged(auth, (u) => {
             user = u;
             if (u) {
-                document.getElementById('status-text').innerText = "Conexión establecida.";
                 const btn = document.getElementById('btn-start');
+                document.getElementById('status-text').innerText = "Realidad sintonizada.";
                 btn.innerText = "ENTRAR";
                 btn.classList.remove('opacity-40', 'pointer-events-none');
             }
         });
 
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else { await signInAnonymously(auth); }
+        };
         initAuth();
 
         window.goTo = (id) => {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            const target = document.getElementById(`screen-${id}`);
-            if (target) target.classList.add('active');
+            document.getElementById(`screen-${id}`).classList.add('active');
         };
 
         window.toggleObject = (btn, name) => {
@@ -409,35 +410,37 @@
         window.setVoice = (v) => {
             innerVoice = v;
             goTo('loading');
-            setTimeout(() => showResult(), 1200); 
+            setTimeout(() => showResult(), 2000); 
         };
 
         function showResult() {
-            const pool = currentConfig.songs[innerVoice] || currentConfig.songs.kind;
+            // Algoritmo de selección basado en los objetos elegidos
             const weight = selected.reduce((acc, s) => acc + s.length, 0);
-            const result = pool[weight % pool.length];
+            const index = weight % currentConfig.songs.length;
+            const result = currentConfig.songs[index];
 
             document.getElementById('res-title').innerText = result.title;
-            document.getElementById('res-tag').innerText = result.tag || (innerVoice === 'kind' ? 'LUZ' : 'SOMBRA');
+            document.getElementById('res-tag').innerText = innerVoice === 'kind' ? 'VOZ AMABLE' : 'VOZ CRÍTICA';
             document.getElementById('res-desc').innerText = result.desc;
-            document.getElementById('res-critique').innerText = result.critique || "";
+            document.getElementById('res-critique').innerText = result.critique;
             document.getElementById('res-link').href = result.url;
             
             goTo('result');
         }
 
+        // GENERADOR DE ÁRBOLES
         function createTree() {
             const container = document.getElementById('trees-container');
             if(!container) return;
             const tree = document.createElement('div');
             tree.className = 'tree';
             tree.innerHTML = `<svg viewBox="0 0 100 100"><path d="M50 10 L85 85 L15 85 Z" fill="currentColor"/><rect x="45" y="85" width="10" height="15" fill="currentColor"/></svg>`;
-            tree.style.left = `${5 + Math.random() * 90}%`;
-            tree.style.top = `${5 + Math.random() * 70}%`;
-            tree.style.animation = `zoomTree ${12 + Math.random() * 10}s linear ${Math.random() * 5}s infinite`;
+            tree.style.left = `${Math.random() * 100}%`;
+            tree.style.top = `${Math.random() * 80}%`;
+            tree.style.animation = `zoomTree ${15 + Math.random() * 15}s linear ${Math.random() * 10}s infinite`;
             container.appendChild(tree);
         }
-        for(let i=0; i<15; i++) createTree();
+        for(let i=0; i<20; i++) createTree();
     </script>
 </body>
 </html>
