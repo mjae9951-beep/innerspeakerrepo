@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Innerspeaker Experience - Pro Branding Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Innerspeaker Experience</title>
     
     <!-- Scripts Base -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -15,7 +15,14 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap');
         
-        body { margin: 0; font-family: 'Inter', sans-serif; background-color: #000; color: white; overflow-x: hidden; }
+        body { 
+            margin: 0; 
+            font-family: 'Inter', sans-serif; 
+            background-color: #000; 
+            color: white; 
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
@@ -57,7 +64,7 @@
         .admin-input:focus { border-color: #fbbf24; outline: none; }
 
         .analysis-card {
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 1.5rem;
@@ -72,23 +79,22 @@
         import { getFirestore, doc, setDoc, onSnapshot, updateDoc, collection } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
-        // Obtener configuración dinámica del entorno para evitar errores de mismatch de token
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : {
-                apiKey: "AIzaSyCXcM54HHeambvpHkJY1-N1G3Q7UPcPOj8",
-                authDomain: "innerspeaker-568f3.firebaseapp.com",
-                projectId: "innerspeaker-568f3",
-                storageBucket: "innerspeaker-568f3.firebasestorage.app",
-                messagingSenderId: "945238998266",
-                appId: "1:945238998266:web:661d0080b0d42cb7a59d43"
-            };
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXcM54HHeambvpHkJY1-N1G3Q7UPcPOj8",
+            authDomain: "innerspeaker-568f3.firebaseapp.com",
+            projectId: "innerspeaker-568f3",
+            storageBucket: "innerspeaker-568f3.firebasestorage.app",
+            messagingSenderId: "945238998266",
+            appId: "1:945238998266:web:661d0080b0d42cb7a59d43"
+        };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'innerspeaker-experience';
+        const rawAppId = typeof __app_id !== 'undefined' ? __app_id : 'innerspeaker-experience';
+        const safeAppId = rawAppId.replace(/\./g, '_'); 
+        
         const apiKeyGemini = ""; 
         const ADMIN_PASSWORD = "raiden";
 
@@ -103,15 +109,15 @@
             },
             texts: {
                 welcomeTitle: "Innerspeaker",
-                welcomeSubtitle: "Una exploración lírica sobre tu momento actual",
-                welcomeButton: "Comenzar exploración",
-                selectionTitle: "Selecciona 3 elementos que capten tu atención",
-                voiceTitle: "¿Cómo describirías tu estado mental hoy?",
+                welcomeSubtitle: "Análisis sonoro basado en tu percepción",
+                welcomeButton: "Iniciar análisis",
+                selectionTitle: "Selecciona 3 objetos de tu entorno actual",
+                voiceTitle: "¿Cómo percibes tu estado mental hoy?",
                 voiceAmable: "En calma / Reflexivo",
                 voiceCritica: "Inquieto / Analítico",
-                revealTitle: "Tu resonancia lírica es:",
-                youtubeButton: "Escuchar canción",
-                loadingText: "Interpretando líricas..."
+                revealTitle: "La frecuencia recomendada es:",
+                youtubeButton: "Reproducir en YouTube",
+                loadingText: "Analizando patrones musicales..."
             },
             objects: [
                 { id: 1, name: "Cámara Analógica", song: "It Is Not Meant to Be", url: "https://www.youtube.com/watch?v=b0S6I0C2m-o", amablePct: 85 },
@@ -142,10 +148,11 @@
                         })
                     });
                     const data = await response.json();
-                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "...";
+                    let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "...";
+                    return text.replace(/\*\*/g, '').replace(/\*/g, '');
                 } catch (err) { retries++; await delay(Math.pow(2, retries) * 1000); }
             }
-            return "Error al conectar con la IA.";
+            return "Error al conectar con el analizador.";
         }
 
         const Icon = ({ name, size = 24, className = "" }) => {
@@ -165,26 +172,17 @@
             const [isAiLoading, setIsAiLoading] = React.useState(false);
             const [aiAnalysis, setAiAnalysis] = React.useState("");
 
-            const getConfigDocRef = () => doc(db, 'artifacts', appId, 'public', 'data', 'configs', 'main');
+            const getConfigDocRef = () => doc(db, 'artifacts', safeAppId, 'public', 'data', 'global', 'settings');
 
             React.useEffect(() => {
                 const initAuth = async () => {
                     try {
-                        // Priorizar el token inicial del entorno para evitar errores de desajuste
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            try {
-                                await signInWithCustomToken(auth, __initial_auth_token);
-                            } catch (e) {
-                                // Si el token falla (mismatch), intentar anónimo como respaldo
-                                console.warn("Custom token failed, falling back to anonymous:", e);
-                                await signInAnonymously(auth);
-                            }
+                            await signInWithCustomToken(auth, __initial_auth_token).catch(() => signInAnonymously(auth));
                         } else {
                             await signInAnonymously(auth);
                         }
-                    } catch (err) {
-                        console.error("Critical Auth error:", err);
-                    }
+                    } catch (err) { console.error("Auth error:", err); }
                 };
                 initAuth();
                 const unsubscribe = onAuthStateChanged(auth, setUser);
@@ -193,20 +191,11 @@
 
             React.useEffect(() => {
                 if (!user) return;
-                
                 const configDocRef = getConfigDocRef();
-                
                 const unsubscribe = onSnapshot(configDocRef, (snap) => {
-                    if (snap.exists()) {
-                        setConfig(snap.data());
-                    } else {
-                        // Solo el primer usuario inicializa la config
-                        setDoc(configDocRef, DEFAULT_CONFIG).catch(console.error);
-                    }
-                }, (error) => {
-                    console.error("Firestore Listen Error:", error);
-                });
-
+                    if (snap.exists()) setConfig(snap.data());
+                    else setDoc(configDocRef, DEFAULT_CONFIG).catch(console.error);
+                }, (error) => console.error("Listen Error:", error));
                 return () => unsubscribe();
             }, [user]);
 
@@ -223,8 +212,8 @@
             const generateLyricAnalysis = async () => {
                 setIsAiLoading(true);
                 const result = getResult();
-                const systemPrompt = "Eres un analista experto en la música de Tame Impala. Explica la conexión emocional entre la canción y el estado del usuario.";
-                const prompt = `La canción es "${result.song}". El usuario eligió: ${selectedObjects.map(o=>o.name).join(', ')}. Estado: ${voiceType === 'amable' ? 'tranquilo' : 'inquieto'}. Analiza la letra y por qué resuena con él. Máximo 60 palabras.`;
+                const systemPrompt = "Eres un analista musical técnico especializado en la psicodelia de Tame Impala. Tu tarea es explicar la relación entre los objetos, el estado mental y la canción recomendada. No menciones nombres de personas (no digas Kevin). No uses lenguaje poético. Sé directo y simple. PROHIBIDO usar negritas (**), cursivas o cualquier estilo de texto Markdown. Habla sobre frecuencias, texturas sonoras y atmósfera musical. No hagas comparaciones. Tu respuesta debe parecer natural, no generada por IA.";
+                const prompt = `Estado mental: ${voiceType === 'amable' ? 'Calma' : 'Análisis crítico'}. Objetos seleccionados: ${selectedObjects.map(o=>o.name).join(', ')}. Canción recomendada: ${result.song}. Explica en 60 palabras por qué esta pista es el ajuste técnico ideal para este estado mental y estos objetos basándote en la música de Tame Impala.`;
                 const response = await callGemini(prompt, systemPrompt);
                 setAiAnalysis(response);
                 setIsAiLoading(false);
@@ -241,14 +230,26 @@
             const handleUpdateConfig = async (e) => {
                 if (e) e.preventDefault();
                 if (!user) return;
-                
-                const configDocRef = getConfigDocRef();
                 try {
-                    await setDoc(configDocRef, config, { merge: true });
+                    await setDoc(getConfigDocRef(), config, { merge: true });
                     setIsAdminMode(false);
-                } catch (err) {
-                    console.error("Update Error:", err);
-                }
+                } catch (err) { console.error("Update Error:", err); }
+            };
+
+            const handleFileUpload = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    setConfig({
+                        ...config,
+                        appearance: {
+                            ...config.appearance,
+                            backgroundUrl: event.target.result
+                        }
+                    });
+                };
+                reader.readAsDataURL(file);
             };
 
             const Background = () => {
@@ -285,18 +286,12 @@
                         {!isAuthenticated ? (
                             <div className="space-y-6 text-center">
                                 <h2 className="text-xl font-black uppercase tracking-widest">Acceso Editor</h2>
-                                <input 
-                                    type="password" 
-                                    placeholder="Contraseña" 
-                                    className="admin-input text-center" 
-                                    value={adminPass} 
+                                <input type="password" placeholder="Contraseña" className="admin-input text-center" value={adminPass} 
                                     onChange={e => setAdminPass(e.target.value)} 
                                     onKeyDown={e => e.key === 'Enter' && adminPass === ADMIN_PASSWORD && setIsAuthenticated(true)}
                                 />
                                 <button onClick={() => adminPass === ADMIN_PASSWORD ? setIsAuthenticated(true) : setAdminPass("")} 
-                                        className="w-full py-4 bg-white text-black font-black uppercase text-xs tracking-widest">
-                                    Entrar
-                                </button>
+                                        className="w-full py-4 bg-white text-black font-black uppercase text-xs tracking-widest">Entrar</button>
                                 <button onClick={() => setIsAdminMode(false)} className="text-[10px] uppercase font-bold opacity-30 mt-4">Cancelar</button>
                             </div>
                         ) : (
@@ -305,77 +300,82 @@
                                     <h2 className="text-xl font-black uppercase tracking-widest text-amber-500">Panel de Control</h2>
                                     <div className="flex gap-2">
                                         <button onClick={() => setIsAdminMode(false)} className="px-4 py-2 text-xs font-bold uppercase opacity-50">Cerrar</button>
-                                        <button onClick={handleUpdateConfig} className="px-6 py-2 bg-amber-500 text-black font-bold text-xs uppercase tracking-widest rounded shadow-lg shadow-amber-500/20">
-                                            Guardar Cambios
-                                        </button>
+                                        <button onClick={handleUpdateConfig} className="px-6 py-2 bg-amber-500 text-black font-bold text-xs uppercase tracking-widest rounded shadow-lg">Guardar</button>
                                     </div>
                                 </div>
-
                                 <section className="space-y-4">
-                                    <h3 className="text-xs font-bold uppercase text-amber-500/60 tracking-widest border-l-2 border-amber-500 pl-3">Diseño y Fondo</h3>
+                                    <h3 className="text-xs font-bold uppercase text-amber-500 tracking-widest">Fondo y Estética</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
+                                        <div>
                                             <label className="text-[10px] uppercase opacity-40 font-bold">Tipo de Fondo</label>
                                             <select className="admin-input" value={config.appearance.backgroundType} onChange={e => setConfig({...config, appearance: {...config.appearance, backgroundType: e.target.value}})}>
                                                 <option value="color">Color Sólido</option>
-                                                <option value="image">Imagen (URL)</option>
-                                                <option value="video">Video MP4 (URL)</option>
+                                                <option value="image">Imagen (Enlace/Local)</option>
+                                                <option value="video">Video (Enlace/Local MP4)</option>
                                             </select>
                                         </div>
-                                        {config.appearance.backgroundType === 'color' ? (
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] uppercase opacity-40 font-bold">Color HEX</label>
-                                                <input className="admin-input" type="color" value={config.appearance.bgColor} onChange={e => setConfig({...config, appearance: {...config.appearance, bgColor: e.target.value}})} />
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] uppercase opacity-40 font-bold">URL del Archivo</label>
+                                        <div>
+                                            <label className="text-[10px] uppercase opacity-40 font-bold">Opacidad Capa Negra</label>
+                                            <input type="range" min="0" max="1" step="0.1" className="w-full mt-2" value={config.appearance.overlayOpacity} onChange={e => setConfig({...config, appearance: {...config.appearance, overlayOpacity: parseFloat(e.target.value)}})} />
+                                        </div>
+                                    </div>
+                                    {config.appearance.backgroundType !== 'color' && (
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="text-[10px] uppercase opacity-40 font-bold">Enlace del Recurso (URL)</label>
                                                 <input className="admin-input" placeholder="https://..." value={config.appearance.backgroundUrl} onChange={e => setConfig({...config, appearance: {...config.appearance, backgroundUrl: e.target.value}})} />
                                             </div>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center gap-6 p-4 bg-white/5 rounded-lg">
-                                        <label className="text-[10px] uppercase font-bold whitespace-nowrap">Opacidad Overlay ({config.appearance.overlayOpacity})</label>
-                                        <input type="range" min="0" max="0.9" step="0.05" className="w-full" value={config.appearance.overlayOpacity} onChange={e => setConfig({...config, appearance: {...config.appearance, overlayOpacity: parseFloat(e.target.value)}})} />
-                                    </div>
+                                            <div className="p-4 border border-dashed border-white/20 rounded-lg text-center">
+                                                <label className="text-[10px] uppercase font-bold cursor-pointer block">
+                                                    Subir desde dispositivo local
+                                                    <input type="file" accept={config.appearance.backgroundType === 'video' ? 'video/mp4' : 'image/*'} className="hidden" onChange={handleFileUpload} />
+                                                </label>
+                                                <p className="text-[9px] opacity-40 mt-1">Soporta Imágenes y MP4</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {config.appearance.backgroundType === 'color' && (
+                                        <div>
+                                            <label className="text-[10px] uppercase opacity-40 font-bold">Color de Fondo</label>
+                                            <input type="color" className="admin-input h-10 p-1" value={config.appearance.bgColor} onChange={e => setConfig({...config, appearance: {...config.appearance, bgColor: e.target.value}})} />
+                                        </div>
+                                    )}
                                 </section>
-
                                 <section className="space-y-4">
-                                    <h3 className="text-xs font-bold uppercase text-amber-500/60 tracking-widest border-l-2 border-amber-500 pl-3">Textos del Sitio</h3>
+                                    <h3 className="text-xs font-bold uppercase text-amber-500 tracking-widest">Textos de Pantalla</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {Object.keys(config.texts).map(key => (
-                                            <div key={key} className="space-y-1">
-                                                <label className="text-[9px] uppercase opacity-40 font-mono">{key}</label>
+                                            <div key={key}>
+                                                <label className="text-[9px] uppercase opacity-40">{key}</label>
                                                 <input className="admin-input" value={config.texts[key]} onChange={e => setConfig({...config, texts: {...config.texts, [key]: e.target.value}})} />
                                             </div>
                                         ))}
                                     </div>
                                 </section>
-
                                 <section className="space-y-4">
-                                    <h3 className="text-xs font-bold uppercase text-amber-500/60 tracking-widest border-l-2 border-amber-500 pl-3">Gestión de Canciones</h3>
+                                    <h3 className="text-xs font-bold uppercase text-amber-500 tracking-widest">Base de Canciones y Objetos</h3>
                                     <div className="grid grid-cols-1 gap-4">
                                         {config.objects.map((obj, idx) => (
-                                            <div key={obj.id} className="p-5 bg-white/5 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
-                                                <div className="flex justify-between items-center mb-4">
-                                                    <span className="text-[10px] font-black text-amber-500 bg-amber-500/10 px-2 py-1 rounded">POSICIÓN {idx+1}</span>
-                                                </div>
+                                            <div key={obj.id} className="p-4 bg-white/5 rounded-xl space-y-3 border border-white/5">
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                                    <input className="admin-input" placeholder="Nombre Objeto" value={obj.name} onChange={e => {
-                                                        const newObjs = [...config.objects];
-                                                        newObjs[idx].name = e.target.value;
-                                                        setConfig({...config, objects: newObjs});
-                                                    }} />
-                                                    <input className="admin-input" placeholder="Canción" value={obj.song} onChange={e => {
-                                                        const newObjs = [...config.objects];
-                                                        newObjs[idx].song = e.target.value;
-                                                        setConfig({...config, objects: newObjs});
-                                                    }} />
-                                                    <input className="admin-input" placeholder="Link YouTube" value={obj.url} onChange={e => {
-                                                        const newObjs = [...config.objects];
-                                                        newObjs[idx].url = e.target.value;
-                                                        setConfig({...config, objects: newObjs});
-                                                    }} />
+                                                    <div>
+                                                        <label className="text-[9px] uppercase opacity-40">Nombre Objeto</label>
+                                                        <input className="admin-input" value={obj.name} onChange={e => {
+                                                            const n = [...config.objects]; n[idx].name = e.target.value; setConfig({...config, objects: n});
+                                                        }} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[9px] uppercase opacity-40">Canción Tame Impala</label>
+                                                        <input className="admin-input" value={obj.song} onChange={e => {
+                                                            const n = [...config.objects]; n[idx].song = e.target.value; setConfig({...config, objects: n});
+                                                        }} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[9px] uppercase opacity-40">Enlace YouTube</label>
+                                                        <input className="admin-input" value={obj.url} onChange={e => {
+                                                            const n = [...config.objects]; n[idx].url = e.target.value; setConfig({...config, objects: n});
+                                                        }} />
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
@@ -391,7 +391,7 @@
                 <ScreenWrapper>
                     <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter text-center leading-[0.85]">{config.texts.welcomeTitle}</h1>
                     <p className="text-[10px] md:text-xs tracking-[0.4em] font-bold opacity-60 uppercase py-10 text-center max-w-md">{config.texts.welcomeSubtitle}</p>
-                    <button onClick={() => setScreen('selection')} className="px-14 py-6 bg-white text-black font-black text-xs uppercase tracking-widest hover:scale-110 transition-transform duration-300">
+                    <button onClick={() => setScreen('selection')} className="px-14 py-6 bg-white text-black font-black text-xs uppercase tracking-widest hover:scale-110 transition-transform">
                         {config.texts.welcomeButton}
                     </button>
                 </ScreenWrapper>
@@ -407,14 +407,14 @@
                                 <button key={obj.id} onClick={() => {
                                     if(isSelected) setSelectedObjects(selectedObjects.filter(o => o.id !== obj.id));
                                     else if(selectedObjects.length < 3) setSelectedObjects([...selectedObjects, obj]);
-                                }} className={`aspect-square border-2 transition-all duration-300 p-4 flex items-center justify-center text-center font-black uppercase text-[10px] tracking-tighter ${isSelected ? 'border-white bg-white text-black scale-95 shadow-xl shadow-white/20' : 'border-white/10 bg-black/40 backdrop-blur-md hover:border-white/40'}`}>
+                                }} className={`aspect-square border-2 transition-all p-4 flex items-center justify-center text-center font-black uppercase text-[10px] tracking-tighter ${isSelected ? 'border-white bg-white text-black scale-95' : 'border-white/10 bg-black/40 hover:border-white/40'}`}>
                                     {obj.name}
                                 </button>
                             );
                         })}
                     </div>
                     <button disabled={selectedObjects.length < 3} onClick={() => setScreen('voice')} 
-                            className="px-16 py-5 border-2 border-white font-black uppercase text-[10px] tracking-widest disabled:opacity-10 hover:bg-white hover:text-black transition-all">
+                            className="px-16 py-5 border-2 border-white font-black uppercase text-[10px] tracking-widest disabled:opacity-10 hover:bg-white hover:text-black">
                         Continuar ({selectedObjects.length}/3)
                     </button>
                 </ScreenWrapper>
@@ -424,10 +424,10 @@
                 <ScreenWrapper>
                     <h2 className="text-2xl md:text-4xl font-black uppercase tracking-widest mb-16 text-center leading-tight">{config.texts.voiceTitle}</h2>
                     <div className="flex flex-col gap-4 w-full max-w-sm">
-                        <button onClick={() => { setVoiceType('amable'); setScreen('loading-reveal'); }} className="p-10 border-2 border-white/20 bg-black/40 backdrop-blur-xl hover:bg-white hover:text-black transition-all font-black uppercase text-xs tracking-[0.3em]">
+                        <button onClick={() => { setVoiceType('amable'); setScreen('loading-reveal'); }} className="p-10 border-2 border-white/20 bg-black/40 hover:bg-white hover:text-black transition-all font-black uppercase text-xs tracking-[0.3em]">
                             {config.texts.voiceAmable}
                         </button>
-                        <button onClick={() => { setVoiceType('critica'); setScreen('loading-reveal'); }} className="p-10 border-2 border-white/20 bg-black/40 backdrop-blur-xl hover:bg-white hover:text-black transition-all font-black uppercase text-xs tracking-[0.3em]">
+                        <button onClick={() => { setVoiceType('critica'); setScreen('loading-reveal'); }} className="p-10 border-2 border-white/20 bg-black/40 hover:bg-white hover:text-black transition-all font-black uppercase text-xs tracking-[0.3em]">
                             {config.texts.voiceCritica}
                         </button>
                     </div>
@@ -450,27 +450,21 @@
                                 <h3 className="text-[10px] font-bold uppercase tracking-[0.8em] opacity-30 mb-8">{config.texts.revealTitle}</h3>
                                 <h2 className="text-6xl md:text-9xl font-black uppercase tracking-tighter leading-none border-y-2 border-white/10 py-12">{res.song}</h2>
                             </div>
-
                             <div className="analysis-card p-10 md:p-14 text-left animate-fade-in" style={{ animationDelay: '0.4s' }}>
                                 {isAiLoading ? (
-                                    <div className="space-y-4">
-                                        <div className="h-2 bg-white/10 w-full rounded animate-pulse" />
-                                        <div className="h-2 bg-white/10 w-5/6 rounded animate-pulse" />
-                                        <div className="h-2 bg-white/10 w-4/6 rounded animate-pulse" />
-                                    </div>
+                                    <div className="space-y-4"><div className="h-2 bg-white/10 w-full rounded animate-pulse"/><div className="h-2 bg-white/10 w-5/6 rounded animate-pulse"/></div>
                                 ) : (
-                                    <p className="text-base md:text-xl font-medium leading-relaxed opacity-80 italic tracking-tight">
-                                        "{aiAnalysis}"
+                                    <p className="text-base md:text-lg font-normal leading-relaxed opacity-90 tracking-normal text-slate-100">
+                                        {aiAnalysis}
                                     </p>
                                 )}
                             </div>
-
                             <div className="flex flex-col md:flex-row gap-8 justify-center items-center animate-fade-in" style={{ animationDelay: '0.6s' }}>
                                 <a href={res.url} target="_blank" rel="noopener noreferrer" className="w-full md:w-auto px-14 py-6 bg-white text-black font-black uppercase text-xs tracking-widest flex items-center justify-center gap-4 hover:scale-105 transition-transform">
                                     <Icon name="play" size={16} fill="currentColor" /> {config.texts.youtubeButton}
                                 </a>
                                 <button onClick={() => { setScreen('home'); setSelectedObjects([]); setVoiceType(null); setAiAnalysis(""); }} 
-                                        className="text-[11px] uppercase font-black opacity-20 hover:opacity-100 transition-opacity tracking-widest border-b border-transparent hover:border-white">
+                                        className="text-[11px] uppercase font-black opacity-20 hover:opacity-100 tracking-widest">
                                     Explorar otra vez
                                 </button>
                             </div>
@@ -478,7 +472,6 @@
                     </ScreenWrapper>
                 );
             }
-
             return null;
         }
 
