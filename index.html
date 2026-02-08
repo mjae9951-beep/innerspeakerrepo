@@ -140,6 +140,7 @@
         const db = getFirestore(app);
         const appId = 'innerspeaker-v11-final'; 
         const ADMIN_PASS = "raiden";
+        const LOCAL_CONFIG_KEY = 'innerspeaker-local-config';
 
         const INITIAL_DATA = {
             appearance: {
@@ -160,7 +161,16 @@
                 voiceCritica: "Crítica y Analítica",
                 loadingMsg: "Sintonizando tu frecuencia interior...",
                 resultTitle: "Tu Frecuencia:",
-                btnYoutube: "Escuchar en YouTube"
+                btnYoutube: "Escuchar en YouTube",
+                selectedCountLabel: "Seleccionados",
+                btnBackHome: "Volver al inicio",
+                btnBackObjects: "Volver a elegir objetos",
+                btnRestart: "Reiniciar Viaje",
+                statusConnecting: "conectando",
+                statusConnected: "conectado",
+                statusAuthError: "error auth",
+                statusDbError: "error db",
+                statusNoSession: "sin sesión"
             },
             objects: [
                 { id: 1, name: "Cámara", song: "It Is Not Meant to Be", url: "https://youtu.be/b0S6I0C2m-o", weight: 90, description: "Texturas lo-fi y saturación analógica." },
@@ -196,6 +206,14 @@
             return <span ref={iconRef} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: size, height: size }}></span>;
         };
 
+        const mergeConfigWithDefaults = (incoming = {}) => ({
+            appearance: { ...INITIAL_DATA.appearance, ...(incoming.appearance || {}) },
+            texts: { ...INITIAL_DATA.texts, ...(incoming.texts || {}) },
+            objects: Array.isArray(incoming.objects) && incoming.objects.length
+                ? incoming.objects.map((obj, idx) => ({ ...INITIAL_DATA.objects[idx], ...obj }))
+                : INITIAL_DATA.objects
+        });
+
         function App() {
             const [user, setUser] = React.useState(null);
             const [config, setConfig] = React.useState(INITIAL_DATA);
@@ -206,34 +224,67 @@
             const [adminPass, setAdminPass] = React.useState("");
             const [isAuthed, setIsAuthed] = React.useState(false);
             const [syncStatus, setSyncStatus] = React.useState('saved');
+            const [loadStatus, setLoadStatus] = React.useState('connecting');
             
             const settingsDocRef = doc(db, 'artifacts', appId, 'public', 'data');
 
             React.useEffect(() => {
                 const initAuth = async () => {
-                    try { await signInAnonymously(auth); } catch (e) { console.error(e); }
+                    try {
+                        await signInAnonymously(auth);
+                    } catch (e) {
+                        console.error(e);
+                        setLoadStatus('auth-error');
+                    }
                 };
                 initAuth();
-                const unsubscribeAuth = onAuthStateChanged(auth, setUser);
+                const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+                    setUser(currentUser);
+                    if (currentUser) setLoadStatus('connected');
+                });
                 return () => unsubscribeAuth();
             }, []);
 
             React.useEffect(() => {
+                if (user) return;
+                try {
+                    const localConfig = localStorage.getItem(LOCAL_CONFIG_KEY);
+                    if (localConfig) setConfig(mergeConfigWithDefaults(JSON.parse(localConfig)));
+                } catch (e) {
+                    console.error(e);
+                }
+            }, [user]);
+
+            React.useEffect(() => {
                 if (!user) return;
                 const unsubscribeSnap = onSnapshot(settingsDocRef, (s) => {
-                    if (s.exists()) setConfig(s.data());
+                    if (s.exists()) setConfig(mergeConfigWithDefaults(s.data()));
                     else setDoc(settingsDocRef, INITIAL_DATA);
+                    if (loadStatus !== 'auth-error') setLoadStatus('connected');
+                }, (e) => {
+                    console.error(e);
+                    setLoadStatus('firestore-error');
                 });
                 return () => unsubscribeSnap();
             }, [user]);
 
             const saveToCloud = async (newConfig) => {
-                if (!user) return;
+                if (!user) {
+                    setSyncStatus('error');
+                    setLoadStatus('auth-error');
+                    return;
+                }
+
                 setSyncStatus('syncing');
                 try {
                     await setDoc(settingsDocRef, newConfig);
+                    try { localStorage.setItem(LOCAL_CONFIG_KEY, JSON.stringify(newConfig)); } catch (e) { console.error(e); }
                     setSyncStatus('saved');
-                } catch (e) { setSyncStatus('error'); }
+                } catch (e) {
+                    console.error(e);
+                    setSyncStatus('error');
+                    setLoadStatus('firestore-error');
+                }
             };
 
             const getResult = () => {
@@ -242,6 +293,10 @@
                 const avg = (selected.reduce((a, b) => a + b.weight, 0) / selected.length) + voiceModifier;
                 return config.objects.reduce((p, c) => Math.abs(c.weight - avg) < Math.abs(p.weight - avg) ? c : p);
             };
+
+            const displayWelcomeTitle = (config.texts.welcomeTitle || '').trim().toLowerCase() === 'innespeaker'
+                ? 'Innerspeaker'
+                : config.texts.welcomeTitle;
 
             const Layout = ({ children, animate = true }) => (
                 <div className="relative min-h-screen w-full flex flex-col items-center justify-center p-4 text-center overflow-hidden" style={{ color: config.appearance.textColor }}>
@@ -260,12 +315,23 @@
                     <div className={`z-10 w-full max-w-4xl ${animate ? 'animate-in fade-in zoom-in duration-700' : ''}`}>{children}</div>
                     
                     {!isAdmin && (
-                        <button onClick={() => setIsAdmin(true)} className="fixed bottom-4 right-4 opacity-10 hover:opacity-100 z-50 p-2">
-                            <Icon name="settings" size={16}/>
-                        </button>
+                        <>
+                            <div className="fixed bottom-4 left-4 z-50 text-[9px] uppercase tracking-[0.2em] px-3 py-2 rounded-full border border-white/20 bg-black/40">
+                                Estado: {user ? (loadStatus === 'connected' ? config.texts.statusConnected : loadStatus === 'firestore-error' ? config.texts.statusDbError : config.texts.statusConnecting) : (loadStatus === 'auth-error' ? config.texts.statusNoSession : config.texts.statusConnecting)}
+                            </div>
+                            <button onClick={() => setIsAdmin(true)} className="fixed bottom-4 right-4 opacity-30 hover:opacity-100 z-50 p-2">
+                                <Icon name="settings" size={16}/>
+                            </button>
+                        </>
                     )}
                 </div>
             );
+
+            React.useEffect(() => {
+                if (screen !== 'loading') return undefined;
+                const timer = setTimeout(() => setScreen('reveal'), 2500);
+                return () => clearTimeout(timer);
+            }, [screen]);
 
             if (isAdmin) return (
                 <div className="fixed inset-0 z-[100] bg-zinc-950 text-white flex flex-col items-center justify-start overflow-y-auto custom-scrollbar p-4 md:p-10">
@@ -289,7 +355,7 @@
                             </div>
 
                             <div className="admin-section">
-                                <h3 className="text-amber-500 font-black text-xs uppercase mb-6 flex items-center gap-2"><Icon name="palette" size={14}/> Fondo y Estética</h3>
+                                <h3 className="font-black text-xs uppercase mb-6 flex items-center gap-2" style={{ color: config.appearance.accentColor }}><Icon name="palette" size={14}/> Fondo y Estética</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] uppercase font-bold opacity-40">Tipo de Fondo</label>
@@ -311,11 +377,51 @@
                                                    setConfig(nc); saveToCloud(nc);
                                                }} />
                                     </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] uppercase font-bold opacity-40">Opacidad Overlay ({config.appearance.overlayOpacity})</label>
+                                        <input type="range" min="0" max="0.95" step="0.05" className="w-full" value={config.appearance.overlayOpacity}
+                                               onChange={e => {
+                                                   const nc = {...config, appearance: {...config.appearance, overlayOpacity: Number(e.target.value)}};
+                                                   setConfig(nc); saveToCloud(nc);
+                                               }} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] uppercase font-bold opacity-40">Color del texto</label>
+                                        <input type="color" className="admin-input h-11" value={config.appearance.textColor}
+                                               onChange={e => {
+                                                   const nc = {...config, appearance: {...config.appearance, textColor: e.target.value}};
+                                                   setConfig(nc); saveToCloud(nc);
+                                               }} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] uppercase font-bold opacity-40">Color de acento</label>
+                                        <input type="color" className="admin-input h-11" value={config.appearance.accentColor}
+                                               onChange={e => {
+                                                   const nc = {...config, appearance: {...config.appearance, accentColor: e.target.value}};
+                                                   setConfig(nc); saveToCloud(nc);
+                                               }} />
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="admin-section">
-                                <h3 className="text-amber-500 font-black text-xs uppercase mb-6 flex items-center gap-2"><Icon name="music" size={14}/> Las 11 Canciones (Objetos)</h3>
+                                <h3 className="font-black text-xs uppercase mb-6 flex items-center gap-2" style={{ color: config.appearance.accentColor }}><Icon name="type" size={14}/> Textos de la Experiencia</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {Object.entries(config.texts).map(([key, value]) => (
+                                        <div key={key}>
+                                            <label className="text-[8px] opacity-40 uppercase font-bold">{key}</label>
+                                            <input className="admin-input" value={value} onChange={e => {
+                                                const nt = { ...config.texts, [key]: e.target.value };
+                                                const nc = { ...config, texts: nt };
+                                                setConfig(nc); saveToCloud(nc);
+                                            }} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="admin-section">
+                                <h3 className="font-black text-xs uppercase mb-6 flex items-center gap-2" style={{ color: config.appearance.accentColor }}><Icon name="music" size={14}/> Las 11 Canciones (Objetos)</h3>
                                 <div className="space-y-4">
                                     {config.objects.map((obj, idx) => (
                                         <div key={obj.id} className="bg-white/5 p-4 rounded-xl border border-white/5">
@@ -358,15 +464,20 @@
 
             if (screen === 'home') return (
                 <Layout>
-                    <h1 className="text-7xl md:text-[10rem] font-black uppercase tracking-tighter leading-none mb-4 italic">{config.texts.welcomeTitle}</h1>
-                    <p className="text-[11px] uppercase tracking-[0.5em] font-bold opacity-60 mb-16">{config.texts.welcomeSub}</p>
-                    <button onClick={() => setScreen('select')} className="bg-white text-black font-black uppercase text-xs px-16 py-6 hover:scale-110 transition-transform">{config.texts.btnStart}</button>
+                    <div className="w-full max-w-3xl mx-auto flex flex-col items-center justify-center text-center">
+                        <h1 className="mx-auto w-full text-[3.2rem] sm:text-7xl md:text-[9rem] font-black uppercase tracking-tight leading-[0.92] mb-6 italic text-center">{displayWelcomeTitle}</h1>
+                    <p className="mx-auto w-full text-[11px] uppercase tracking-[0.28em] font-bold opacity-70 mb-14 text-center">{config.texts.welcomeSub}</p>
+                        <button onClick={() => setScreen('select')} className="bg-white text-black font-black uppercase text-xs px-16 py-6 hover:scale-110 transition-transform rounded-full">{config.texts.btnStart}</button>
+                    </div>
                 </Layout>
             );
 
             if (screen === 'select') return (
                 <Layout>
-                    <h2 className="text-[11px] font-black uppercase tracking-[0.3em] opacity-40 mb-12">{config.texts.selectionTitle}</h2>
+                    <h2 className="text-[11px] font-black uppercase tracking-[0.3em] opacity-40 mb-4">{config.texts.selectionTitle}</h2>
+                    <p className="text-xs uppercase tracking-[0.2em] mb-8" style={{ color: config.appearance.accentColor }}>
+                        {config.texts.selectedCountLabel}: {selected.length}/3
+                    </p>
                     <div className="flex justify-center w-full px-4 mb-16">
                         <div className="objects-grid">
                             {config.objects.map(obj => {
@@ -387,6 +498,7 @@
                             })}
                         </div>
                     </div>
+                    <button onClick={() => { setSelected([]); setScreen('home'); }} className="mt-8 text-[10px] uppercase tracking-[0.3em] opacity-50 hover:opacity-100">{config.texts.btnBackHome}</button>
                 </Layout>
             );
 
@@ -398,16 +510,16 @@
                             <Icon name="heart" size={32} className="text-amber-500 group-hover:scale-110 transition-transform" />
                             <span className="font-black uppercase italic text-xl leading-tight">{config.texts.voiceAmable}</span>
                         </button>
-                        <button onClick={() => { setVoiceType('zap'); setScreen('loading'); }} className="voice-card p-10 rounded-3xl flex flex-col items-center gap-4 group">
+                        <button onClick={() => { setVoiceType('critica'); setScreen('loading'); }} className="voice-card p-10 rounded-3xl flex flex-col items-center gap-4 group">
                             <Icon name="activity" size={32} className="text-blue-400 group-hover:scale-110 transition-transform" />
                             <span className="font-black uppercase italic text-xl leading-tight">{config.texts.voiceCritica}</span>
                         </button>
                     </div>
+                    <button onClick={() => setScreen('select')} className="mt-8 text-[10px] uppercase tracking-[0.3em] opacity-50 hover:opacity-100">{config.texts.btnBackObjects}</button>
                 </Layout>
             );
 
             if (screen === 'loading') {
-                setTimeout(() => setScreen('reveal'), 2500);
                 return (
                     <Layout animate={false}>
                         <div className="space-y-8 flex flex-col items-center">
@@ -431,7 +543,7 @@
                             <a href={res.url} target="_blank" className="bg-white text-black px-12 py-6 font-black uppercase text-[11px] flex items-center justify-center gap-4 hover:scale-105 transition-transform">
                                 <Icon name="external-link" size={16} /> {config.texts.btnYoutube}
                             </a>
-                            <button onClick={() => { setScreen('home'); setSelected([]); setVoiceType(null); }} className="text-[10px] font-black uppercase opacity-30 hover:opacity-100 tracking-widest border-b border-white/20 pb-1">Reiniciar Viaje</button>
+                            <button onClick={() => { setScreen('home'); setSelected([]); setVoiceType(null); }} className="text-[10px] font-black uppercase opacity-30 hover:opacity-100 tracking-widest border-b border-white/20 pb-1">{config.texts.btnRestart}</button>
                         </div>
                     </Layout>
                 );
